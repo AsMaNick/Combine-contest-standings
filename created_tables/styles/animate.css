@@ -1,0 +1,35 @@
+@keyframes color_change_ac_first {
+  0% {
+    background-color: #0fff0f;
+  }
+  100% {
+    background-color: #b0ffb0;
+  }
+}
+
+@keyframes color_change_ac {
+  0% {
+    background-color: #a3ffa3;
+  }
+  100% {
+    background-color: #e0ffe0;
+  }
+}
+
+@keyframes color_change_wa0 {
+  0% {
+    background-color: #ffa3a3;
+  }
+  100% {
+    background-color: #ffd0d0;
+  }
+}
+
+@keyframes color_change_wa1 {
+  0% {
+    background-color: #ffa4a4;
+  }
+  100% {
+    background-color: #ffd0d0;
+  }
+}
