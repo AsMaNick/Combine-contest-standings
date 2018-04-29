@@ -25,7 +25,7 @@ function getWrongTries(result) {
 	return parseInt(result.substr(1));
 }
 
-function compare_submission_by_time(first, second) {
+function compareSubmissionByTime(first, second) {
 	if (first.time < second.time || (first.time == second.time && getWrongTries(first.result) < getWrongTries(second.result))) {
 		return -1;
 	} else if (first.time > second.time || (first.time == second.time && getWrongTries(first.result) > getWrongTries(second.result))) {
@@ -52,7 +52,7 @@ function Result(id) {
 
 var use_id = 1;
 
-function compare_by_total(first, second) {
+function compareResultByTotal(first, second) {
 	var a = [-first.total, first.penalty, use_id * first.id];
 	var b = [-second.total, second.penalty, use_id * second.id];
 	for (var i = 0; i < 3; ++i) {
@@ -66,7 +66,7 @@ function compare_by_total(first, second) {
 	return 0;
 }
 
-function compare_by_id(first, second) {
+function compareById(first, second) {
 	if (first.id < second.id) {
 		return -1;
 	} else if (first.id > second.id) {
@@ -113,7 +113,7 @@ function Statistic(problems) {
 
 var statistic;
 
-function load_results() {
+function loadResults() {
 	all_teams_elem = document.getElementsByClassName('participant_result');
 	all_place_elem = new Array(all_teams_elem.length);
 	all_total_elem = new Array(all_teams_elem.length);
@@ -165,7 +165,7 @@ function fillY() {
 	}
 }
 
-function update_standings_time(time) {
+function updateStandingsTime(time) {
 	var elem = document.getElementById('standings_time');
 	elem.innerHTML = 'Standings [' + time + ']';
 }
@@ -217,7 +217,7 @@ function getPlaces() {
 			++i;
 			continue;
 		}
-		while (next_place < all_results.length && (compare_by_total(all_results[next_place], all_results[i]) <= 0 || getPlace(all_results[next_place].id) == '-')) {
+		while (next_place < all_results.length && (compareResultByTotal(all_results[next_place], all_results[i]) <= 0 || getPlace(all_results[next_place].id) == '-')) {
 			if (getPlace(all_results[next_place].id) != '-') {
 				++real_next_place;
 			}
@@ -238,13 +238,13 @@ function getPlaces() {
 	return places;
 }
 
-function update_standings_to_time(to_time) {
+function updateStandingsToTime(to_time) {
 	var time_start = Date.now();
 	
 	console.log(cur_time, to_time);
 	var to_time_str = timeInStr(to_time);
-	update_standings_time(to_time_str.substr(1, 4) + ':00');
-	all_results.sort(compare_by_id);
+	updateStandingsTime(to_time_str.substr(1, 4) + ':00');
+	all_results.sort(compareById);
 	for (var i = 0; i < was_submission.length; ++i) {
 		was_submission[i] = 0;
 	}
@@ -281,7 +281,7 @@ function update_standings_to_time(to_time) {
 		cur_submission += 1;
 	}
 	use_id = 1;
-	all_results.sort(compare_by_total);
+	all_results.sort(compareResultByTotal);
 	
 	var places = getPlaces();
 	var to_y = mn_y;
@@ -302,13 +302,13 @@ function update_standings_to_time(to_time) {
 		setTimeout(function() { filter(true) }, 3000);
 	}
 	statistic.prepare();
-	UpdateStatistic(statistic_elem[0], statistic.all_submissions);
-	UpdateStatistic(statistic_elem[1], statistic.ok_submissions);
-	UpdateStatistic(statistic_elem[2], statistic.percent_submissions);
+	updateStatistic(statistic_elem[0], statistic.all_submissions);
+	updateStatistic(statistic_elem[1], statistic.ok_submissions);
+	updateStatistic(statistic_elem[2], statistic.percent_submissions);
 	console.log('Update results', Date.now() - time_start);
 }
 
-function fill_places() {
+function fillPlaces() {
 	var places = getPlaces();
 	for (var i = 0; i < all_results.length; ++i) {
 		var id = all_results[i].id;
@@ -327,12 +327,12 @@ function getContestSpeed() {
 	return parseInt(elem.value);
 }
 
-function update_submissions() {
+function updateSubmissions() {
 	var to_time = Math.min(300, cur_time + getContestSpeed());
 	if (finish_contest) {
 		to_time = 300;
 	}
-	update_standings_to_time(to_time);
+	updateStandingsToTime(to_time);
 }
 
 function finish() {
@@ -348,7 +348,7 @@ function pause() {
 			clearInterval(interval);
 			elem.innerHTML = "Continue";
 		} else {
-			interval = setInterval(update_submissions, 5000);
+			interval = setInterval(updateSubmissions, 5000);
 			elem.innerHTML = "Pause";
 		}
 	}
@@ -408,15 +408,15 @@ function go() {
 		var all_was = [];
 		for (var j = 0; j < probs.length; ++j) {
 			var last_time = 299;
-			var prob_res = GetSubmissionResult(probs[j]);
-			if (GetTime(probs[j]) != '(9:99)') {
+			var prob_res = getSubmissionResult(probs[j]);
+			if (getTime(probs[j]) != '(9:99)') {
 				all_submissions.push(new Submission(id, j,
-													GetTime(probs[j]), 
+													getTime(probs[j]), 
 													prob_res, 
 													probs[j].style.background == 'rgb(176, 255, 176)', 
 													probs[j]));
-				last_time = Math.max(0, timeInMinutes(GetTime(probs[j])) - 1);
-				all_ac_times.push(timeInMinutes(GetTime(probs[j])));
+				last_time = Math.max(0, timeInMinutes(getTime(probs[j])) - 1);
+				all_ac_times.push(timeInMinutes(getTime(probs[j])));
 			}
 			if (prob_res.length > 1 && (prob_res[0] == '+' || prob_res[0] == '-')) {
 				var wa = parseInt(prob_res.substr(1));
@@ -428,7 +428,6 @@ function go() {
 		all_ac_times.sort(function(x, y) { return x - y; } );
 		all_was.sort(function(x, y) { return x[0] - y[0]; } );
 		var pos_ac = 0;
-		//console.log('AC: ', all_ac_times);
 		for (var j = 0; j < all_was.length; ++j) {
 			var last_time = all_was[j][0];
 			var wa = all_was[j][1];
@@ -445,7 +444,6 @@ function go() {
 			if (pos_from >= 0) {
 				from_time = all_ac_times[pos_from];
 			}
-			//console.log(from_time, last_time, wa);
 			var rnds;
 			if (last_time == 299) {
 				rnds = new Array(wa + 1);
@@ -475,17 +473,17 @@ function go() {
 		updatePenalty(i, 0);
 	}
 	console.log('Prepared', Date.now() - time_start);
-	all_submissions.sort(compare_submission_by_time);
-	for (var i = 0; i < all_submissions.length; ++i) {
+	all_submissions.sort(compareSubmissionByTime);
+	/*for (var i = 0; i < all_submissions.length; ++i) {
 		console.log(all_submissions[i]);
-	}
+	}*/
 	cur_submission = 0;
 	cur_time = 0;
 	statistic = new Statistic(problems);
 	statistic_elem = document.getElementsByClassName('submissions_statistic');
 	contest_penalty = getPenalty();
-	update_standings_to_time(getStartTime());
+	updateStandingsToTime(getStartTime());
 	if (cur_time < 300) {
-		interval = setInterval(update_submissions, 5000);
+		interval = setInterval(updateSubmissions, 5000);
 	}
 }

@@ -221,7 +221,7 @@ class Standings:
 		else:
 			print('<link rel="stylesheet" href="http://ejudge.khai.edu/ejudge/unpriv.css" type="text/css" />', file=f)
 			print('<link rel="stylesheet" href="http://ejudge.khai.edu/ejudge/unpriv3.css" type="text/css" />', file=f)
-		print('<body onload=load_results()>', file=f)
+		print('<body onload=loadResults()>', file=f)
 		print('<script type="text/javascript" src="scripts/jquery.js"> </script>', file=f)
 		print('<script type="text/javascript" src="scripts/filter_regions.js"> </script>', file=f)
 		print('<script type="text/javascript" src="scripts/animate.js"> </script>', file=f)

@@ -1,14 +1,14 @@
 var ok_regions, best_time, all_submissions, ok_submissions;
 var place;
 
-function UpdateRegions(index, elem) {
+function updateRegions(index, elem) {
 	var checkbox = elem.getElementsByTagName('input')[0];
 	if (checkbox.checked) {
 		ok_regions.add(elem.getElementsByClassName('st_region')[1].innerHTML);
 	}
 }
 
-function GetTime(elem) {
+function getTime(elem) {
 	if (elem == undefined) {
 		return '(9:99)';
 	}
@@ -19,7 +19,7 @@ function GetTime(elem) {
 	return '(9:99)';
 }
 
-function GetSubmissionResult(elem) {
+function getSubmissionResult(elem) {
 	if (elem == undefined) {
 		return '';
 	}
@@ -33,7 +33,7 @@ function GetSubmissionResult(elem) {
 	return res; 
 }
 
-function MyModify(index, elem) {
+function myModify(index, elem) {
 	elem.style = "";
 	var region = elem.getElementsByClassName('st_extra')[0].innerHTML;
 	if (ok_regions.has(region)) {
@@ -56,7 +56,7 @@ function MyModify(index, elem) {
 			}
 		}
 		for (var i = 0; i < probs.length; ++i) {
-			var prob_result = GetSubmissionResult(probs[i]);
+			var prob_result = getSubmissionResult(probs[i]);
 			if (prob_result != '') {
 				if (prob_result[0] == '+') {
 					all_submissions[i] += 1;
@@ -66,9 +66,8 @@ function MyModify(index, elem) {
 					all_submissions[i] += parseInt(prob_result.substr(1));
 				}
 			}
-			var cur_tm = GetTime(probs[i]);
-			if (cur_tm < GetTime(best_time[i])) {
-				//console.log(probs[i]);
+			var cur_tm = getTime(probs[i]);
+			if (cur_tm < getTime(best_time[i])) {
 				if (best_time[i] != undefined) {
 					best_time[i].style = 'background: #e0ffe0';
 				}
@@ -83,7 +82,7 @@ function MyModify(index, elem) {
 	}
 }
 
-function UpdateStatistic(elem, arr) {
+function updateStatistic(elem, arr) {
 	var elems = elem.getElementsByClassName('st_prob');
 	for (var i = 0; i < elems.length; ++i) {
 		elems[i].innerHTML = arr[i];
@@ -96,9 +95,9 @@ function filter(call_fill_places) {
 	ok_submissions = undefined;
 	percent_submissions = undefined;
 	ok_regions = new Set();
-	$(".row_region").each(UpdateRegions);
+	$(".row_region").each(updateRegions);
 	place = 0;
-	$(".participant_result").each(MyModify);
+	$(".participant_result").each(myModify);
 	if (all_submissions == undefined) {
 		all_submissions = new Array(problems + 1);
 		ok_submissions = new Array(problems + 1);
@@ -124,34 +123,34 @@ function filter(call_fill_places) {
 		percent_submissions[i] = percent_submissions[i].toString() + '%';
 	}
 	var statistic = document.getElementsByClassName('submissions_statistic');
-	UpdateStatistic(statistic[0], all_submissions);
-	UpdateStatistic(statistic[1], ok_submissions);
-	UpdateStatistic(statistic[2], percent_submissions);
+	updateStatistic(statistic[0], all_submissions);
+	updateStatistic(statistic[1], ok_submissions);
+	updateStatistic(statistic[2], percent_submissions);
 	if (call_fill_places) {
-		fill_places();
+		fillPlaces();
 	}
 }
 
-var toUpdate;
+var to_update;
 
 function updateEnable(index, elem) {
 	var checkbox = elem.getElementsByTagName('input')[0];
-	checkbox.disabled = toUpdate;
+	checkbox.disabled = to_update;
 }
 
 function disableRegions(disabled) {
-	toUpdate = disabled;
+	to_update = disabled;
 	$(".row_region").each(updateEnable);
 }
 
-function updateRegionState(index, elem) {
+function updateRegionstate(index, elem) {
 	var checkbox = elem.getElementsByTagName('input')[0];
-	checkbox.checked = toUpdate;
+	checkbox.checked = to_update;
 }
 	
 function checkAll() {
 	var checkbox = document.getElementById('region_all').getElementsByTagName('input')[0];
-	toUpdate = checkbox.checked;
-	$(".row_region").each(updateRegionState);
+	to_update = checkbox.checked;
+	$(".row_region").each(updateRegionstate);
 	filter();
 }
