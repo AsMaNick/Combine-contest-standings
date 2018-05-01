@@ -9,7 +9,7 @@ var all_submissions;
 var all_results;
 var is_animation = false;
 var finish_contest = false;
-var was_submission, problems;
+var was_submission, was_wa_modified, last_wa_parity, problems;
 var statistic_elem;
 			
 function Submission(id, problem_id, time, result, is_opener, elem) {
@@ -247,6 +247,9 @@ function updateStandingsToTime(to_time) {
 	all_results.sort(compareById);
 	for (var i = 0; i < was_submission.length; ++i) {
 		was_submission[i] = 0;
+		for (var j = 0; j < problems; ++j) {
+			was_wa_modified[i][j] = 0;
+		}
 	}
 	while (cur_submission < all_submissions.length && all_submissions[cur_submission].time <= to_time_str) {
 		var time = all_submissions[cur_submission].time;
@@ -258,7 +261,10 @@ function updateStandingsToTime(to_time) {
 		statistic.addSubmission(all_submissions[cur_submission]);
 		if (submission_result[0] == '-') {
 			prob.innerHTML = submission_result;
-			prob.style = 'animation: color_change_wa' + (submission_result.substr(1) % 2).toString() + ' 3s; animation-fill-mode: forwards;';
+			if (!was_wa_modified[id][problem_id]) {
+				prob.style = 'animation: color_change_wa' + last_wa_parity[id][problem_id].toString() + ' 3s; animation-fill-mode: forwards;';
+				was_wa_modified[id][problem_id] = 1;
+			}
 			//prob.style = 'background: #ffd0d0';
 		} else if (is_opener) {
 			prob.style = 'animation: color_change_ac_first 3s 1; animation-fill-mode: forwards;';
@@ -294,6 +300,11 @@ function updateStandingsToTime(to_time) {
 			updatePenalty(id, all_results[i].penalty);
 			updateDirt(id, all_results[i].getDirt());
 		}
+		for (var j = 0; j < problems; ++j) {			
+			if (was_wa_modified[i][j] == 1) {
+				last_wa_parity[i][j] ^= 1;
+			}
+		}
 		to_y += height[id] + margin_y[i];
 	}
 	cur_time = to_time;
@@ -320,6 +331,7 @@ function fillPlaces() {
 	}
 	is_animation = false;
 	disableRegions(false);
+	updateMaxHeight(40);
 }
 
 function getContestSpeed() {
@@ -394,8 +406,8 @@ function go() {
 	all_submissions = [];
 	all_results = new Array();
 	var id = -1;
-	was_submission = new Array(all_teams_elem.length);
 	var time_start = Date.now();
+	was_submission = new Array(all_teams_elem.length);
 	for (var i = 0; i < all_teams_elem.length; ++i) {
 		if (all_teams_elem[i].hidden) {
 			continue;
@@ -471,6 +483,16 @@ function go() {
 		updateDirt(i, '0.00');
 		updateTotal(i, 0);
 		updatePenalty(i, 0);
+	}
+	last_wa_parity = new Array(all_results.length);
+	was_wa_modified = new Array(all_results.length);
+	for (var i = 0; i < all_results.length; ++i) {
+		last_wa_parity[i] = new Array(problems);
+		was_wa_modified[i] = new Array(problems);
+		for (var j = 0; j < problems; ++j) {
+			last_wa_parity[i][j] = 0;
+			was_wa_modified[i][j] = 0;
+		}
 	}
 	console.log('Prepared', Date.now() - time_start);
 	all_submissions.sort(compareSubmissionByTime);

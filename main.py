@@ -22,6 +22,7 @@ links = [('http://acmallukrainian.ho.ua/standings_old.html', ''),
 ]
 problems = 14
 penalty_points = 10
+max_length_place = '7771777'
 
 #olympiad_date = '2<sup>st</sup> Stage Ukraine, September 16, 2017'
 #links = [('http://olymp.sumdu.edu.ua:8080/tren.php', '')]
@@ -72,7 +73,7 @@ class Result:
 		
 	def write(self, place, open_times, f):
 		print('<tr class="participant_result">', file=f)
-		print('<td class="st_place"><input style="width: 50px; outline: none; border:none" readonly type="text" value={}></input></td>'.format(place), file=f)
+		print('<td class="st_place"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(place), file=f)
 		print('<td class="st_team">{}</td>'.format(self.name), file=f)
 		print('<td class="st_extra">{}</td>'.format(self.region), file=f)
 		for prob_res, prob_time, open_time in zip(self.problem_results, self.problem_times, open_times):
@@ -90,9 +91,9 @@ class Result:
 			if prob_time != '':
 				print('<div class="st_time">{}</div>'.format(prob_time), end='', file=f)
 			print('</td>', file=f)
-		print('<td class="st_total"><input style="width: 30px; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.total), file=f)
-		print('<td class="st_pen"><input style="width: 40px; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.penalty), file=f)
-		print('<td class="st_pen"><input style="width: 30px; outline: none; border:none" readonly type="text" value={:.2f}></input></td>'.format(self.get_dirt()), file=f)
+		print('<td class="st_total"><input style="width: 100%; min-width: 30px; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.total), file=f)
+		print('<td class="st_pen"><input style="width: 100%; min-width: 40px; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.penalty), file=f)
+		print('<td class="st_pen"><input style="width: 100%; min-width: 30px; outline: none; border:none" readonly type="text" value={:.2f}></input></td>'.format(self.get_dirt()), file=f)
 		#print('<td  class="st_total">{}</td>'.format(self.total), file=f)
 		#print('<td  class="st_pen">{}</td>'.format(self.penalty), file=f)
 		#print('<td  class="st_pen">{:.2f}</td>'.format(self.get_dirt()), file=f)
@@ -140,17 +141,17 @@ class Standings:
 		
 	def write_stats(self, f=sys.stdout):	
 		print('<tr class="submissions_statistic">', file=f)
-		print('<td  class="st_place">&nbsp;</td>', file=f)
+		print('<td  class="st_place"><output style="color: transparent">{}</output></td>'.format(max_length_place), file=f)
 		print('<td  class="st_team">Submissions:</td>', file=f)
 		print('<td  class="st_team">&nbsp;</td>', file=f)
 		for x in self.get_total():
 			print('<td  class="st_prob">{}</td>'.format(x), file=f)
-		print('<td  class="st_team">&nbsp;</td>', file=f)
-		print('<td  class="st_team">&nbsp;</td>', file=f)
+		print('<td  class="st_pen"><output style="color: transparent">9999</output></td>', file=f)
+		print('<td  class="st_pen"><output style="color: transparent">0.99</output></td>', file=f)
 		print('</tr>', file=f)
 		
 		print('<tr class="submissions_statistic">', file=f)
-		print('<td  class="st_place">&nbsp;</td>', file=f)
+		print('<td  class="st_place"></td>', file=f)
 		print('<td  class="st_team">Accepted:</td>', file=f)
 		print('<td  class="st_team">&nbsp;</td>', file=f)
 		for x in self.get_ok():
@@ -236,9 +237,9 @@ class Standings:
 		#contest managing
 		print('<table class="region_statistic" width="50%"> <tr> <th> Start time </th> <th> Contest speed </th> <th>Penalty for wrong submission</th> <th> Start the contest </th> <th> Finish the contest </th> <th> Suspend the contest </th> </tr>', file=f)
 		print('<tr>', file=f)
-		print('<td class="st_region" align="center"> <input type="text" id="contest_start_time" value="0:00:00" maxlength=7 style="width:50px"> </input> </td>', file=f)
+		print('<td class="st_region" align="center"> <input type="text" id="contest_start_time" value="0:00:00" maxlength=7 style="width:100%"> </input> </td>', file=f)
 		print('<td class="st_region" align="center"> <input type="range" id="contest_speed" min="1" max="60" value="10"> </input> </td>', file=f)
-		print('<td class="st_region" align="center"> <input style="width: 40px" type="number" id="penalty_points" min="1" max="20" value="{}"> </input> </td>'.format(penalty_points), file=f)
+		print('<td class="st_region" align="center"> <input style="width: 50px" type="number" id="penalty_points" min="1" max="20" value="{}"> </input> </td>'.format(penalty_points), file=f)
 		print('<td class="st_region" align="center"> <button onclick=go()> Start </button> </td>', file=f)
 		print('<td class="st_region" align="center"> <button onclick=finish()> Finish </button> </td>', file=f)
 		print('<td class="st_region" align="center"> <button id="pause" onclick=pause()>Pause</button> </td>', file=f)
