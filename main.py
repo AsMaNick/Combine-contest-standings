@@ -91,9 +91,9 @@ class Result:
 			if prob_time != '':
 				print('<div class="st_time">{}</div>'.format(prob_time), end='', file=f)
 			print('</td>', file=f)
-		print('<td class="st_total"><input style="width: 100%; min-width: 30px; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.total), file=f)
-		print('<td class="st_pen"><input style="width: 100%; min-width: 40px; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.penalty), file=f)
-		print('<td class="st_pen"><input style="width: 100%; min-width: 30px; outline: none; border:none" readonly type="text" value={:.2f}></input></td>'.format(self.get_dirt()), file=f)
+		print('<td class="st_total"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.total), file=f)
+		print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.penalty), file=f)
+		print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text" value={:.2f}></input></td>'.format(self.get_dirt()), file=f)
 		#print('<td  class="st_total">{}</td>'.format(self.total), file=f)
 		#print('<td  class="st_pen">{}</td>'.format(self.penalty), file=f)
 		#print('<td  class="st_pen">{:.2f}</td>'.format(self.get_dirt()), file=f)
