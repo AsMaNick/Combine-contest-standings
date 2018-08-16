@@ -247,6 +247,8 @@ function updateStandingsToTime(to_time) {
 	all_results.sort(compareById);
 	for (var i = 0; i < was_submission.length; ++i) {
 		was_submission[i] = 0;
+	}
+	for (var i = 0; i < was_wa_modified.length; ++i) {
 		for (var j = 0; j < problems; ++j) {
 			was_wa_modified[i][j] = 0;
 		}
@@ -486,6 +488,7 @@ function go() {
 	}
 	last_wa_parity = new Array(all_results.length);
 	was_wa_modified = new Array(all_results.length);
+	console.log(all_results.length, problems);
 	for (var i = 0; i < all_results.length; ++i) {
 		last_wa_parity[i] = new Array(problems);
 		was_wa_modified[i] = new Array(problems);
