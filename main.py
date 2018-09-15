@@ -3,6 +3,7 @@ import json
 import dis
 import codecs
 import sys
+import os
 
 
 ignore_regions = {'School'}
@@ -20,15 +21,47 @@ links = [('http://ejudge.khai.edu/ejudge/contest180421.html', 'East'),
 links = [('http://olymp.sumdu.edu.ua:8080/stage2-2018.php', ''), 
 	#('http://olymp.moippo.org.ua/standings/standings2104.html', 'South')
 ]
+
 problems = 15
 penalty_points = 20
 max_length_place = '7771777'
 
-#olympiad_date = '2<sup>st</sup> Stage Ukraine, September 16, 2017'
-#links = [('http://olymp.sumdu.edu.ua:8080/tren.php', '')]
-#problems = 12
-#penalty_points = 20
+f = open('created_tables/standings.html', 'w')
+all_successful_submits = {}
 
+if os.path.exists('submissions.csv'):
+	import pandas as pd
+
+	print('<div id="submissionsLog"><!--', file=f)
+	data = pd.read_csv('submissions.csv', ';')
+	all_status = {}
+	for it, row in data.iterrows():
+		user_name = str(row['User_Name']).replace(' ', '&sp&', 1000000000)
+		prob_id = ord(row['Prob']) - ord('A')
+		hour = row['Dur_Hour']
+		minute = row['Dur_Min']
+		second = row['Dur_Sec']
+		time = '({}:{}{})'.format(hour, minute // 10, minute % 10)
+		status = row['Stat_Short']
+		p = (user_name, prob_id)
+		wrong_attempts = 0
+		if p in all_status:
+			wrong_attempts = all_status[p]
+		if wrong_attempts == -1:
+			continue
+		if status == 'OK':
+			result = '+'
+			if wrong_attempts != 0:
+				result += str(wrong_attempts)
+			wrong_attempts = -1
+			all_successful_submits[p] = time
+		else:
+			wrong_attempts += 1
+			result = '-' + str(wrong_attempts)
+		all_status[p] = wrong_attempts
+		print(user_name, prob_id, time, result, file=f)
+	print('--></div>', file=f)
+	
 def get_value(text, pattern, pos):
 	pos = text.find(pattern, pos)
 	pos += len(pattern)
@@ -226,6 +259,7 @@ class Standings:
 		print('<script type="text/javascript" src="scripts/jquery.js"> </script>', file=f)
 		print('<script type="text/javascript" src="scripts/filter_regions.js"> </script>', file=f)
 		print('<script type="text/javascript" src="scripts/animate.js"> </script>', file=f)
+		print('<script type="text/javascript" src="scripts/parse_submissions.js"> </script>', file=f)
 		print('<div id="main-cont">', file=f)
 		print('<div id="container">', file=f)
 		print(standings_title, file=f)
@@ -342,6 +376,9 @@ def process(content, region):
 					prob_time, pos = get_value(text, '"st_time">', pos)
 				else:
 					prob_time = '(0:00)'
+					try_look = (team, prob_id)
+					if try_look in all_successful_submits:
+						prob_time = all_successful_submits[try_look]
 			problem_results.append(prob_res)
 			problem_times.append(prob_time)
 		total, pos = get_value(text, '"st_total">', pos)
@@ -373,5 +410,4 @@ for link, region in links:
 	r = requests.post(link)
 	process(r.content, region)
 standings.sort()
-f = open('created_tables/standings.html', 'w')
 standings.write(f)

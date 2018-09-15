@@ -4,7 +4,7 @@ String.prototype.replaceAll = function(search, replace){
 
 function parseSubmisions() {
 	var log = document.getElementById('submissionsLog').innerHTML;
-	log = log.substr(4, log.length - 7);
+	log = log.substr(5, log.length - 8);
 	var submissions = log.split('\n');
 	var result = new Array(submissions.length);
 	for (var i = 0; i < submissions.length; ++i) {
