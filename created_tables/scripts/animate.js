@@ -22,13 +22,23 @@ function Submission(id, problem_id, time, result, is_opener, elem) {
 }
 
 function getWrongTries(result) {
+	if (result.length == 1) {
+		return 0;
+	}
+	if (result[0] == "+") {
+		return parseInt(result.substr(1)) + 1;
+	}
 	return parseInt(result.substr(1));
 }
 
+function lessSubmissionByTime(first, second) {
+	return first.time < second.time || (first.time == second.time && getWrongTries(first.result) < getWrongTries(second.result));
+}
+
 function compareSubmissionByTime(first, second) {
-	if (first.time < second.time || (first.time == second.time && getWrongTries(first.result) < getWrongTries(second.result))) {
+	if (lessSubmissionByTime(first, second)) {
 		return -1;
-	} else if (first.time > second.time || (first.time == second.time && getWrongTries(first.result) > getWrongTries(second.result))) {
+	} else if (lessSubmissionByTime(second, first)) {
 		return 1;
 	} else {
 		return 0;
@@ -312,7 +322,7 @@ function updateStandingsToTime(to_time) {
 	cur_time = to_time;
 	if (cur_submission == all_submissions.length) {
 		clearInterval(interval);
-		setTimeout(function() { filter(true) }, 3000);
+		setTimeout(function() { updateStandingsTime('5:00:00'); filter(true) }, 3000);
 	}
 	statistic.prepare();
 	updateStatistic(statistic_elem[0], statistic.all_submissions);
@@ -410,84 +420,120 @@ function go() {
 	var id = -1;
 	var time_start = Date.now();
 	was_submission = new Array(all_teams_elem.length);
-	for (var i = 0; i < all_teams_elem.length; ++i) {
-		if (all_teams_elem[i].hidden) {
-			continue;
-		}
-		all_teams_elem[i].style = "transition: transform 1s ease-in-out 0ms, opacity 1s ease-in-out 0ms;";
-		id += 1;
-		all_results.push(new Result(i));
-		var probs = all_teams_elem[i].getElementsByClassName('st_prob');
-		var all_ac_times = [];
-		var all_was = [];
-		for (var j = 0; j < probs.length; ++j) {
-			var last_time = 299;
-			var prob_res = getSubmissionResult(probs[j]);
-			if (getTime(probs[j]) != '(9:99)') {
-				all_submissions.push(new Submission(id, j,
-													getTime(probs[j]), 
-													prob_res, 
-													probs[j].style.background == 'rgb(176, 255, 176)', 
-													probs[j]));
-				last_time = Math.max(0, timeInMinutes(getTime(probs[j])) - 1);
-				all_ac_times.push(timeInMinutes(getTime(probs[j])));
+	if (document.getElementById('submissionsLog') === null) {
+		for (var i = 0; i < all_teams_elem.length; ++i) {
+			if (all_teams_elem[i].hidden) {
+				continue;
 			}
-			if (prob_res.length > 1 && (prob_res[0] == '+' || prob_res[0] == '-')) {
-				var wa = parseInt(prob_res.substr(1));
-				all_was.push([last_time, wa, j, probs[j]]);
-			}
-			probs[j].innerHTML = '&nbsp';
-			probs[j].style = '';
-		}
-		all_ac_times.sort(function(x, y) { return x - y; } );
-		all_was.sort(function(x, y) { return x[0] - y[0]; } );
-		var pos_ac = 0;
-		for (var j = 0; j < all_was.length; ++j) {
-			var last_time = all_was[j][0];
-			var wa = all_was[j][1];
-			var problem_id = all_was[j][2];
-			var elem = all_was[j][3];
-			while (pos_ac < all_ac_times.length && all_ac_times[pos_ac] <= last_time) {
-				++pos_ac;
-			}
-			var pos_from = pos_ac - 2;
-			if (last_time == 299) {
-				--pos_from;
-			}
-			var from_time = 0;
-			if (pos_from >= 0) {
-				from_time = all_ac_times[pos_from];
-			}
-			var rnds;
-			if (last_time == 299) {
-				rnds = new Array(wa + 1);
-				rnds[0] = 0;
-				for (var k = 1; k <= wa; ++k) {
-					rnds[k] = (Math.random() - 0.5) * 0.2
+			all_teams_elem[i].style = "transition: transform 1s ease-in-out 0ms, opacity 1s ease-in-out 0ms;";
+			id += 1;
+			all_results.push(new Result(i));
+			var probs = all_teams_elem[i].getElementsByClassName('st_prob');
+			var all_ac_times = [];
+			var all_was = [];
+			for (var j = 0; j < probs.length; ++j) {
+				var last_time = 299;
+				var prob_res = getSubmissionResult(probs[j]);
+				if (getTime(probs[j]) != '(9:99)') {
+					all_submissions.push(new Submission(id, j,
+														getTime(probs[j]), 
+														prob_res, 
+														probs[j].style.background == 'rgb(176, 255, 176)', 
+														probs[j]));
+					last_time = Math.max(0, timeInMinutes(getTime(probs[j])) - 1);
+					all_ac_times.push(timeInMinutes(getTime(probs[j])));
 				}
-				rnds.sort(function(a, b) { return a - b; });
+				if (prob_res.length > 1 && (prob_res[0] == '+' || prob_res[0] == '-')) {
+					var wa = parseInt(prob_res.substr(1));
+					all_was.push([last_time, wa, j, probs[j]]);
+				}
+				probs[j].innerHTML = '&nbsp';
+				probs[j].style = '';
 			}
-			for (var k = 1; k <= wa; ++k) {
-				var coef = k / (k + 1);
+			all_ac_times.sort(function(x, y) { return x - y; } );
+			all_was.sort(function(x, y) { return x[0] - y[0]; } );
+			var pos_ac = 0;
+			for (var j = 0; j < all_was.length; ++j) {
+				var last_time = all_was[j][0];
+				var wa = all_was[j][1];
+				var problem_id = all_was[j][2];
+				var elem = all_was[j][3];
+				while (pos_ac < all_ac_times.length && all_ac_times[pos_ac] <= last_time) {
+					++pos_ac;
+				}
+				var pos_from = pos_ac - 2;
 				if (last_time == 299) {
-					coef += rnds[k];
-					coef = Math.max(coef, 0);
-					coef = Math.min(coef, 1);
+					--pos_from;
 				}
-				var time = parseInt(from_time + (last_time - from_time) * coef);
-				if (time == last_time) {
-					time = last_time - 1;
+				var from_time = 0;
+				if (pos_from >= 0) {
+					from_time = all_ac_times[pos_from];
 				}
-				all_submissions.push(new Submission(id, problem_id,
-													timeInStr(time), 
-													'-' + k.toString(), 
-													false, 
-													elem));
+				var rnds;
+				if (last_time == 299) {
+					rnds = new Array(wa + 1);
+					rnds[0] = 0;
+					for (var k = 1; k <= wa; ++k) {
+						rnds[k] = (Math.random() - 0.5) * 0.2
+					}
+					rnds.sort(function(a, b) { return a - b; });
+				}
+				for (var k = 1; k <= wa; ++k) {
+					var coef = k / (k + 1);
+					if (last_time == 299) {
+						coef += rnds[k];
+						coef = Math.max(coef, 0);
+						coef = Math.min(coef, 1);
+					}
+					var time = parseInt(from_time + (last_time - from_time) * coef);
+					all_submissions.push(new Submission(id, problem_id,
+														timeInStr(time), 
+														'-' + k.toString(), 
+														false, 
+														elem));
+				}
+			}
+			updateDirt(i, '0.00');
+			updateTotal(i, 0);
+			updatePenalty(i, 0);
+		}
+	} else {
+		var team_ids = {};
+		var probs = new Array(all_teams_elem.length);
+		var is_opener = new Array(all_teams_elem.length);
+		for (var i = 0; i < all_teams_elem.length; ++i) {
+			if (all_teams_elem[i].hidden) {
+				continue;
+			}
+			id += 1;
+			var team_name = all_teams_elem[i].getElementsByClassName('st_team')[0].innerHTML;
+			team_ids[team_name] = id;
+			probs[id] = all_teams_elem[i].getElementsByClassName('st_prob');
+			all_teams_elem[i].style = "transition: transform 1s ease-in-out 0ms, opacity 1s ease-in-out 0ms;";
+			all_results.push(new Result(i));
+			updateDirt(i, '0.00');
+			updateTotal(i, 0);
+			updatePenalty(i, 0);
+			is_opener[id] = new Array(probs[id].length);
+			for (var j = 0; j < probs[id].length; ++j) {
+				is_opener[id][j] = probs[id][j].style.background == 'rgb(176, 255, 176)';
+				probs[id][j].innerHTML = '&nbsp';
+				probs[id][j].style = '';
 			}
 		}
-		updateDirt(i, '0.00');
-		updateTotal(i, 0);
-		updatePenalty(i, 0);
+		var submissionsData = parseSubmisions();
+		for (var submission of submissionsData) {
+			if (submission[0] in team_ids) {
+				var id = team_ids[submission[0]];
+				var problem_id = submission[1];
+				all_submissions.push(new Submission(id,
+													problem_id,
+													submission[2], // timeInStr
+													submission[3], // result
+													is_opener[id][problem_id],
+													probs[id][problem_id]));
+			}
+		}
 	}
 	last_wa_parity = new Array(all_results.length);
 	was_wa_modified = new Array(all_results.length);
