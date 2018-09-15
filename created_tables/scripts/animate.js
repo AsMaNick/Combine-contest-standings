@@ -474,9 +474,12 @@ function go() {
 					coef = Math.max(coef, 0);
 					coef = Math.min(coef, 1);
 				}
-				var time = from_time + (last_time - from_time) * coef;
+				var time = parseInt(from_time + (last_time - from_time) * coef);
+				if (time == last_time) {
+					time = last_time - 1;
+				}
 				all_submissions.push(new Submission(id, problem_id,
-													timeInStr(parseInt(time)), 
+													timeInStr(time), 
 													'-' + k.toString(), 
 													false, 
 													elem));

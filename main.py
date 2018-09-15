@@ -8,7 +8,7 @@ import sys
 ignore_regions = {'School'}
 show_regions = True
 olympiad_title = 'All-Ukrainian Collegiate Programming Contest'
-olympiad_date = '1<sup>st</sup> Stage Ukraine, April 21, 2018'
+olympiad_date = '2<sup>st</sup> Stage Ukraine, September 15, 2018'
 
 links = [('http://ejudge.khai.edu/ejudge/contest180421.html', 'East'),
 	('http://194.105.136.86/kyiv501.php', 'Kyiv'),
@@ -17,11 +17,11 @@ links = [('http://ejudge.khai.edu/ejudge/contest180421.html', 'East'),
 	('http://olimp.tnpu.edu.ua/standing2018/schools.html', 'School'),
 	('http://194.105.136.86/center500.php', 'Center')
 ]
-links = [('http://acmallukrainian.ho.ua/standings_old.html', ''), 
+links = [('http://olymp.sumdu.edu.ua:8080/stage2-2018.php', ''), 
 	#('http://olymp.moippo.org.ua/standings/standings2104.html', 'South')
 ]
-problems = 14
-penalty_points = 10
+problems = 15
+penalty_points = 20
 max_length_place = '7771777'
 
 #olympiad_date = '2<sup>st</sup> Stage Ukraine, September 16, 2017'
@@ -308,6 +308,8 @@ def process(content, region):
 	pos += len('class="standings"')
 	pos = text.find('<tr', pos) + 1
 	region_column_exist = region == '' and text[pos:pos + 100].find('"st_extra">Region') != -1
+	has_time = text[pos:pos + 2000].find('st_time') != -1
+	print(has_time)
 	while True:
 		pos = text.find('<tr', pos)
 		if pos == -1:
@@ -336,7 +338,10 @@ def process(content, region):
 			prob_res = prob_res.replace(' ', '')
 			prob_time = ''
 			if prob_res[0] == '+':
-				prob_time, pos = get_value(text, '"st_time">', pos)
+				if has_time:
+					prob_time, pos = get_value(text, '"st_time">', pos)
+				else:
+					prob_time = '(0:00)'
 			problem_results.append(prob_res)
 			problem_times.append(prob_time)
 		total, pos = get_value(text, '"st_total">', pos)
