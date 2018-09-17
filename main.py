@@ -10,7 +10,7 @@ ignore_regions = {'School'}
 show_regions = True
 olympiad_title = 'All-Ukrainian Collegiate Programming Contest'
 olympiad_date = '2<sup>st</sup> Stage Ukraine, September 15, 2018'
-
+statistic_team_number = 10
 links = [('http://ejudge.khai.edu/ejudge/contest180421.html', 'East'),
 	('http://194.105.136.86/kyiv501.php', 'Kyiv'),
 	#('http://olymp.franko.lviv.ua/', 'West'),
@@ -223,15 +223,15 @@ class Standings:
 		for place, result in enumerate(self.all_results):
 			if result.region == region or region == 'All':
 				teams += 1
-				if teams <= 20:
+				if teams <= statistic_team_number:
 					problems_solved += result.total
 					sum_place += place + 1
-				if teams <= 20:
+				if teams <= statistic_team_number:
 					solved_by_twentiest_team = result.total
-		return region, teams, problems_solved / min(20, teams), sum_place / min(20, teams), solved_by_twentiest_team
+		return region, teams, problems_solved / min(statistic_team_number, teams), sum_place / min(statistic_team_number, teams), solved_by_twentiest_team
 		
 	def write_regions(self, f):
-		print('''<table class="region_statistic" width="50%"> <tr> <th>Show</th> <th>Region</th><th>Teams</th> <th>Average problems solved by top 20 teams</th> <th>Average place taken by top 20 teams</th> <th>Problems solved by 20<sup>st</sup> team </th> </tr>''', file=f)
+		print('''<table class="region_statistic" width="50%"> <tr> <th>Show</th> <th>Region</th><th>Teams</th> <th>Average problems solved by top {} teams</th> <th>Average place taken by top {} teams</th> <th>Problems solved by {}<sup>st</sup> team </th> </tr>'''.format(statistic_team_number, statistic_team_number, statistic_team_number), file=f)
 		regions = set()
 		for result in self.all_results:
 			regions.add(result.region)
@@ -374,6 +374,8 @@ def process(content, region):
 			real_region = 'School'
 		if real_region == '':
 			real_region = 'School'
+		if real_region == 'South-Eastern': # only for 2018 stage 2
+			real_region = 'SouthWest'
 		problem_results = []
 		problem_times = []
 		for prob_id in range(problems):
