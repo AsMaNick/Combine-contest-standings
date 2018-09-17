@@ -44,6 +44,9 @@ if os.path.exists('runs.csv'):
 		second = row['Dur_Sec']
 		if second != 0:
 			minute += 1
+			if minute == 60:
+				hour += 1
+				minute = 0
 		time = '({}:{}{})'.format(hour, minute // 10, minute % 10)
 		status = row['Stat_Short']
 		if status == 'CE':
