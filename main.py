@@ -6,11 +6,12 @@ import sys
 import os
 from tqdm import tqdm
 
+statistic_team_number = 10
+path_to_scripts = '../../'
 ignore_regions = {'School'}
 show_regions = True
 olympiad_title = 'All-Ukrainian Collegiate Programming Contest'
 olympiad_date = '2<sup>st</sup> Stage Ukraine, September 15, 2018'
-statistic_team_number = 10
 links = [('http://ejudge.khai.edu/ejudge/contest180421.html', 'East'),
 	('http://194.105.136.86/kyiv501.php', 'Kyiv'),
 	#('http://olymp.franko.lviv.ua/', 'West'),
@@ -257,18 +258,18 @@ class Standings:
 		
 	def write(self, f=sys.stdout):
 		if True:
-			print('<link rel="stylesheet" href="styles/unpriv.css" type="text/css" />', file=f)
-			print('<link rel="stylesheet" href="styles/unpriv3.css" type="text/css" />', file=f)
-			print('<link rel="stylesheet" href="styles/animate.css" type="text/css" />', file=f)
+			print('<link rel="stylesheet" href="{}styles/unpriv.css" type="text/css" />'.format(path_to_scripts), file=f)
+			print('<link rel="stylesheet" href="{}styles/unpriv3.css" type="text/css" />'.format(path_to_scripts), file=f)
+			print('<link rel="stylesheet" href="{}styles/animate.css" type="text/css" />'.format(path_to_scripts), file=f)
 			print('<style id="styles"> table.standings td { height: 40px; } </style>', file=f)
 		else:
 			print('<link rel="stylesheet" href="http://ejudge.khai.edu/ejudge/unpriv.css" type="text/css" />', file=f)
 			print('<link rel="stylesheet" href="http://ejudge.khai.edu/ejudge/unpriv3.css" type="text/css" />', file=f)
 		print('<body onload=loadResults()>', file=f)
-		print('<script type="text/javascript" src="scripts/jquery.js"> </script>', file=f)
-		print('<script type="text/javascript" src="scripts/filter_regions.js"> </script>', file=f)
-		print('<script type="text/javascript" src="scripts/animate.js"> </script>', file=f)
-		print('<script type="text/javascript" src="scripts/parse_submissions.js"> </script>', file=f)
+		print('<script type="text/javascript" src="{}scripts/jquery.js"> </script>'.format(path_to_scripts), file=f)
+		print('<script type="text/javascript" src="{}scripts/filter_regions.js"> </script>'.format(path_to_scripts), file=f)
+		print('<script type="text/javascript" src="{}scripts/animate.js"> </script>'.format(path_to_scripts), file=f)
+		print('<script type="text/javascript" src="{}scripts/parse_submissions.js"> </script>'.format(path_to_scripts), file=f)
 		print('<div id="main-cont">', file=f)
 		print('<div id="container">', file=f)
 		print(standings_title, file=f)

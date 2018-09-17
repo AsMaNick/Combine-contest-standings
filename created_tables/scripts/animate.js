@@ -361,6 +361,9 @@ function updateSubmissions() {
 
 function finish() {
 	if (is_animation) {
+		if (document.getElementById('pause').innerHTML == "Continue") {
+			pause();
+		}
 		finish_contest = true;
 	}
 }
