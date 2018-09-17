@@ -4,7 +4,7 @@ import dis
 import codecs
 import sys
 import os
-
+from tqdm import tqdm
 
 ignore_regions = {'School'}
 show_regions = True
@@ -29,20 +29,24 @@ max_length_place = '7771777'
 f = open('created_tables/standings.html', 'w')
 all_successful_submits = {}
 
-if os.path.exists('submissions.csv'):
+if os.path.exists('runs.csv'):
 	import pandas as pd
 
 	print('<div id="submissionsLog"><!--', file=f)
-	data = pd.read_csv('submissions.csv', ';')
+	data = pd.read_csv('runs.csv', ';')
 	all_status = {}
-	for it, row in data.iterrows():
+	for it, row in tqdm(data.iterrows()):
 		user_name = str(row['User_Name']).replace(' ', '&sp&', 1000000000)
 		prob_id = ord(row['Prob']) - ord('A')
 		hour = row['Dur_Hour']
 		minute = row['Dur_Min']
 		second = row['Dur_Sec']
+		if second != 0:
+			minute += 1
 		time = '({}:{}{})'.format(hour, minute // 10, minute % 10)
 		status = row['Stat_Short']
+		if status == 'CE':
+			continue
 		p = (user_name, prob_id)
 		wrong_attempts = 0
 		if p in all_status:
@@ -63,12 +67,17 @@ if os.path.exists('submissions.csv'):
 	print('--></div>', file=f)
 	
 def get_value(text, pattern, pos):
+	'''
+	if pattern == '"st_team">':
+		print(text[pos:pos+80])
+	'''
 	pos = text.find(pattern, pos)
 	pos += len(pattern)
 	res = ''
 	while pos < len(text) and text[pos] != '<':
 		res += text[pos]
 		pos += 1
+	res = res.replace('&#36;', '$', 1000)
 	return res, pos
 	
 
@@ -376,7 +385,7 @@ def process(content, region):
 					prob_time, pos = get_value(text, '"st_time">', pos)
 				else:
 					prob_time = '(0:00)'
-					try_look = (team, prob_id)
+					try_look = (team.replace(' ', '&sp&', 1000000000), prob_id)
 					if try_look in all_successful_submits:
 						prob_time = all_successful_submits[try_look]
 			problem_results.append(prob_res)
