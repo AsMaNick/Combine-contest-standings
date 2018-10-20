@@ -11,7 +11,7 @@ path_to_scripts = '../../'
 ignore_regions = {'School'}
 show_regions = True
 olympiad_title = 'All-Ukrainian Collegiate Programming Contest'
-olympiad_date = '2<sup>st</sup> Stage Ukraine, September 15, 2018'
+olympiad_date = '3<sup>rd</sup> Stage Ukraine, October 20, 2018'
 links = [('http://ejudge.khai.edu/ejudge/contest180421.html', 'East'),
 	('http://194.105.136.86/kyiv501.php', 'Kyiv'),
 	#('http://olymp.franko.lviv.ua/', 'West'),
@@ -19,11 +19,11 @@ links = [('http://ejudge.khai.edu/ejudge/contest180421.html', 'East'),
 	('http://olimp.tnpu.edu.ua/standing2018/schools.html', 'School'),
 	('http://194.105.136.86/center500.php', 'Center')
 ]
-links = [('http://olymp.sumdu.edu.ua:8080/stage2-2018.php', ''), 
+links = [('http://olymp.sumdu.edu.ua:8080/final2018.php', ''), 
 	#('http://olymp.moippo.org.ua/standings/standings2104.html', 'South')
 ]
 
-problems = 15
+problems = 11
 penalty_points = 20
 max_length_place = '7771777'
 
@@ -38,6 +38,9 @@ if os.path.exists('runs.csv'):
 	all_status = {}
 	for it, row in tqdm(data.iterrows()):
 		user_name = str(row['User_Name']).replace(' ', '&sp&', 1000000000)
+		if row['Prob'][0] == '!':
+			print(it, row['Run_Id'], row['Prob'], user_name)
+			continue
 		prob_id = ord(row['Prob']) - ord('A')
 		hour = row['Dur_Hour']
 		minute = row['Dur_Min']
@@ -53,20 +56,22 @@ if os.path.exists('runs.csv'):
 			continue
 		p = (user_name, prob_id)
 		wrong_attempts = 0
+		if p in all_successful_submits:
+			continue
 		if p in all_status:
 			wrong_attempts = all_status[p]
-		if wrong_attempts == -1:
-			continue
 		if status == 'OK':
 			result = '+'
 			if wrong_attempts != 0:
 				result += str(wrong_attempts)
 			wrong_attempts = -1
 			all_successful_submits[p] = time
+			if p[0].find('Energy') != -1:
+				print('#', p)
 		else:
 			wrong_attempts += 1
 			result = '-' + str(wrong_attempts)
-		all_status[p] = wrong_attempts
+			all_status[p] = wrong_attempts
 		print(user_name, prob_id, time, result, file=f)
 	print('--></div>', file=f)
 	
@@ -235,7 +240,7 @@ class Standings:
 		return region, teams, problems_solved / min(statistic_team_number, teams), sum_place / min(statistic_team_number, teams), solved_by_twentiest_team
 		
 	def write_regions(self, f):
-		print('''<table class="region_statistic" width="50%"> <tr> <th>Show</th> <th>Region</th><th>Teams</th> <th>Average problems solved by top {} teams</th> <th>Average place taken by top {} teams</th> <th>Problems solved by {}<sup>st</sup> team </th> </tr>'''.format(statistic_team_number, statistic_team_number, statistic_team_number), file=f)
+		print('''<table class="region_statistic" width="50%"> <tr> <th>Show</th> <th>Region</th><th>Teams</th> <th>Average problems solved by top {} teams</th> <th>Average place taken by top {} teams</th> <th>Problems solved by {}<sup>th</sup> team </th> </tr>'''.format(statistic_team_number, statistic_team_number, statistic_team_number), file=f)
 		regions = set()
 		for result in self.all_results:
 			regions.add(result.region)
@@ -246,6 +251,9 @@ class Standings:
 		all_regions = sorted(all_regions, key=lambda region: region[3])
 		all_regions.append(self.get_region_statistic('All'))
 		for region in all_regions:
+			if region[0] == '':
+				pass
+				#continue
 			print('<tr class="row_region">', file=f)
 			if region[0] == 'All':
 				print('<td class="st_region" id="region_all" align="center"> <input type="checkbox" checked onchange="checkAll()"> </input> </td>', file=f)
@@ -380,6 +388,7 @@ def process(content, region):
 			real_region = 'School'
 		if real_region == 'South-Eastern': # only for 2018 stage 2
 			real_region = 'SouthWest'
+		#real_region = ''
 		problem_results = []
 		problem_times = []
 		for prob_id in range(problems):
@@ -416,13 +425,49 @@ def get_team_names():
 		team_names[team] = name
 	f.close()
 	
+
+def get_penalty_by_time(t):
+	return int(t[1]) * 60 + int(t[3:5])
+	
 	
 standings_title = '<p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p> <p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p>'.format(olympiad_title, olympiad_date)
 get_team_names()
 standings = Standings(show_regions=show_regions, ignore_regions=ignore_regions)
-for link, region in links:
-	print('Processing {}'.format(link))
-	r = requests.post(link)
-	process(r.content, region)
+if not os.path.exists('runs.csv'):
+	for link, region in links:
+		print('Processing {}'.format(link))
+		r = requests.post(link)
+		process(r.content, region)
+else:
+	all_teams = {x[0] for x in all_status}
+	for x in all_successful_submits:
+		all_teams.add(x[0])
+	for team in all_teams:
+		if team.lower() == 'nan':
+			continue
+		results = []
+		times = []
+		solved = 0
+		penalty = 0
+		for prob_id in range(problems):
+			p = (team, prob_id)
+			if p in all_status or p in all_successful_submits:
+				if p in all_successful_submits:
+					result = '+'
+					if p in all_status:
+						result += str(all_status[p])
+						penalty += penalty_points * all_status[p]
+					results.append(result)
+					times.append(all_successful_submits[p])
+					solved += 1
+					penalty += get_penalty_by_time(all_successful_submits[p])
+				else:
+					results.append('-' + str(all_status[p]))
+					times.append('')
+			else:
+				results.append('')
+				times.append('')
+		team_res = Result(team.replace('&sp&', ' '), '', results, times, solved, penalty)
+		standings.add(team_res)
 standings.sort()
 standings.write(f)
