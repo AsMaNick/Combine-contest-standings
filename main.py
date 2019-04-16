@@ -6,32 +6,43 @@ import sys
 import os
 from tqdm import tqdm
 
+
+def bad_user(user_name):
+    return user_name in ['Judge_Main', 'nan', 'judge13', 'ejudge&sp&administrator']
+    
+    
 statistic_team_number = 10
 path_to_scripts = '../../'
 ignore_regions = {'School'}
 show_regions = True
 olympiad_title = 'All-Ukrainian Collegiate Programming Contest'
 olympiad_date = '1<sup>st</sup> Stage Ukraine, April 13, 2019'
-links = [('http://ejudge.khai.edu/ejudge/contest180421.html', 'East'),
-    ('http://194.105.136.86/kyiv501.php', 'Kyiv'),
-    #('http://olymp.franko.lviv.ua/', 'West'),
-    ('http://olimp.tnpu.edu.ua/standing2018/students.html', 'South-West'),
-    ('http://olimp.tnpu.edu.ua/standing2018/schools.html', 'School'),
-    ('http://194.105.136.86/center500.php', 'Center')
-]
-links = [('http://olymp.sumdu.edu.ua:8080/final2018.php', ''), 
-    #('http://olymp.moippo.org.ua/standings/standings2104.html', 'South')
-]
+links = [('http://ejudge.khai.edu/ejudge/contest180421.html', 'East')]
 
 problems = 12
+problem_names = [
+    'Цукерки', 
+    'Врятуйте команди', 
+    'Горiшки', 
+    'Клас', 
+    'Конференцiя', 
+    'Роздiл майна', 
+    'Перефарбуйте кульку', 
+    'Вибори', 
+    'Правила', 
+    'Пiдготувати промову', 
+    'Метро', 
+    'Дисквалiфiкацiя'
+]
+assert problems == len(problem_names)
 penalty_points = 20
 max_length_place = '7771777'
 
-f = open('created_tables/standings.html', 'w')
+f = open('created_tables/standings.html', 'w', encoding='utf8')
 all_successful_submits = {}
 
-csv_files = ['west.csv', 'east.csv', 'center.csv', 'dnipro.csv', 'north.csv', 'sw.csv']
-regions = ['West', 'East', 'Center', 'Dnipro', 'North', 'South-West']
+csv_files = ['west.csv', 'east.csv', 'center.csv', 'dnipro.csv', 'north.csv', 'sw.csv', 'south.csv']
+regions = ['West', 'East', 'Center', 'Center', 'North', 'South-West', 'South']
 team_regions = dict()
 problem_openers = ['' for i in range(problems)]
 time_openers = [1e9 for i in range(problems)]
@@ -41,10 +52,10 @@ if len(csv_files) > 0:
     print('<div id="submissionsLog"><!--', file=f)
     all_status = {}
     for csv_file, region in zip(csv_files, regions):
-        data = pd.read_csv('data/' + csv_file, ';')
+        data = pd.read_csv('data/2019_1/' + csv_file, ';')
         for it, row in tqdm(data.iterrows()):
             user_name = str(row['User_Name']).replace(' ', '&sp&', 1000000000)
-            if row['Prob'][0] == '!' or user_name == 'Judge_Main' or user_name == 'nan':
+            if row['Prob'][0] == '!' or bad_user(user_name):
                 print('Ignoring', it, row['Run_Id'], row['Prob'], user_name)
                 continue
             prob_id = ord(row['Prob']) - ord('A')
@@ -103,6 +114,12 @@ def is_digit(x):
     return '0' <= x <= '9'
     
 
+def get_problem_title(problem_id):
+    if problem_id < len(problem_names):
+        return chr(ord('A') + problem_id) + ' - ' + problem_names[problem_id]
+    return ''
+    
+    
 class Result:
     def __init__(self, name, region, problem_results, problem_times, total, penalty):
         self.name = name
@@ -134,7 +151,10 @@ class Result:
     def write(self, place, open_times, problem_openers, f):
         print('<tr class="participant_result">', file=f)
         print('<td class="st_place"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(place), file=f)
-        print('<td class="st_team">{}</td>'.format(self.name), file=f)
+        team_title = self.name
+        if self.name in team_members:
+            team_title = team_members[self.name]
+        print('<td class="st_team" title="{}">{}</td>'.format(team_title, self.name), file=f)
         print('<td class="st_extra">{}</td>'.format(self.region), file=f)
         for prob_res, prob_time, open_time, problem_opener in zip(self.problem_results, self.problem_times, open_times, problem_openers):
             background = ''
@@ -203,38 +223,38 @@ class Standings:
         total.append(sum(total))
         return total
         
-    def write_stats(self, f=sys.stdout):    
+    def write_stats(self, f=sys.stdout):
         print('<tr class="submissions_statistic">', file=f)
-        print('<td  class="st_place"><output style="color: transparent">{}</output></td>'.format(max_length_place), file=f)
-        print('<td  class="st_team">Submissions:</td>', file=f)
-        print('<td  class="st_team">&nbsp;</td>', file=f)
-        for x in self.get_total():
-            print('<td  class="st_prob">{}</td>'.format(x), file=f)
-        print('<td  class="st_pen"><output style="color: transparent">9999</output></td>', file=f)
-        print('<td  class="st_pen"><output style="color: transparent">0.99</output></td>', file=f)
+        print('<td class="st_place"><output style="color: transparent">{}</output></td>'.format(max_length_place), file=f)
+        print('<td class="st_team">Submissions:</td>', file=f)
+        print('<td class="st_team">&nbsp;</td>', file=f)
+        for problem_id, x in enumerate(self.get_total()):
+            print('<td title="{}" class="st_prob">{}</td>'.format(get_problem_title(problem_id), x), file=f)
+        print('<td class="st_pen"><output style="color: transparent">9999</output></td>', file=f)
+        print('<td class="st_pen"><output style="color: transparent">0.99</output></td>', file=f)
         print('</tr>', file=f)
         
         print('<tr class="submissions_statistic">', file=f)
-        print('<td  class="st_place"></td>', file=f)
-        print('<td  class="st_team">Accepted:</td>', file=f)
-        print('<td  class="st_team">&nbsp;</td>', file=f)
-        for x in self.get_ok():
-            print('<td  class="st_prob">{}</td>'.format(x), file=f)
-        print('<td  class="st_team">&nbsp;</td>', file=f)
-        print('<td  class="st_team">&nbsp;</td>', file=f)
+        print('<td class="st_place"></td>', file=f)
+        print('<td class="st_team">Accepted:</td>', file=f)
+        print('<td class="st_team">&nbsp;</td>', file=f)
+        for problem_id, x in enumerate(self.get_ok()):
+            print('<td title="{}" class="st_prob">{}</td>'.format(get_problem_title(problem_id), x), file=f)
+        print('<td class="st_team">&nbsp;</td>', file=f)
+        print('<td class="st_team">&nbsp;</td>', file=f)
         print('</tr>', file=f)
         
         print('<tr class="submissions_statistic">', file=f)
-        print('<td  class="st_place">&nbsp;</td>', file=f)
-        print('<td  class="st_team">%:</td>', file=f)
-        print('<td  class="st_team">&nbsp;</td>', file=f)
-        for total, ok in zip(self.get_total(), self.get_ok()):
+        print('<td class="st_place">&nbsp;</td>', file=f)
+        print('<td class="st_team">%:</td>', file=f)
+        print('<td class="st_team">&nbsp;</td>', file=f)
+        for problem_id, (total, ok) in enumerate(zip(self.get_total(), self.get_ok())):
             perc = 0
             if total > 0:
                 perc = 100 * ok / total
-            print('<td  class="st_prob">{:.0f}%</td>'.format(perc), file=f)
-        print('<td  class="st_team">&nbsp;</td>', file=f)
-        print('<td  class="st_team">&nbsp;</td>', file=f)
+            print('<td title="{}" class="st_prob">{:.0f}%</td>'.format(get_problem_title(problem_id), perc), file=f)
+        print('<td class="st_team">&nbsp;</td>', file=f)
+        print('<td class="st_team">&nbsp;</td>', file=f)
         print('</tr>', file=f)
         
     def get_region_statistic(self, region):
@@ -321,7 +341,7 @@ class Standings:
         print('<th class="st_team" style="min-width: 185px">{}</th>'.format('User'), file=f)
         print('<th class="st_extra">{}</th>'.format('Region'), file=f)
         for prob_id in range(problems):
-            print('<th class="st_prob" style="min-width: 32px">{}</th>'.format(chr(ord('A') + prob_id)), file=f)
+            print('<th title="{}" class="st_prob" style="min-width: 32px">{}</th>'.format(get_problem_title(prob_id), chr(ord('A') + prob_id)), file=f)
         print('<th  class="st_total">{}</th>'.format('Total'), file=f)
         print('<th  class="st_pen">{}</th>'.format('Penalty'), file=f)
         print('<th  class="st_pen">{}</th>'.format('Dirt'), file=f)
@@ -424,19 +444,6 @@ def process(content, region):
         if team_res.try_problems() == 0:
             continue
         standings.add(team_res)
-        
-
-team_names = dict()
-
-
-def get_team_names():
-    f = open('replace.txt', 'r')
-    for l in f:
-        if len(l) == 0 or l[0] == '#':
-            continue
-        team, name = l.split()
-        team_names[team] = name
-    f.close()
     
 
 def get_penalty_by_time(t):
@@ -447,8 +454,8 @@ def starts_with(s, t):
     return s[:len(t)] == t
     
     
+team_members = json.load(open('data/team_members.txt', 'r'))
 standings_title = '<p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p> <p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p>'.format(olympiad_title, olympiad_date)
-get_team_names()
 standings = Standings(show_regions=show_regions, ignore_regions=ignore_regions)
 if len(csv_files) == 0:
     for link, region in links:
@@ -495,7 +502,8 @@ else:
             region = team_regions[team]
         if team[:2] == 's_' or team[:1] == 's':
             region = 'School'
-        team_res = Result(team.replace('&sp&', ' '), region, results, times, solved, penalty)
+        team_name = team.replace('&sp&', ' ')
+        team_res = Result(team_name, region, results, times, solved, penalty)
         standings.add(team_res)
 standings.set_problem_openers(problem_openers)
 standings.sort()
