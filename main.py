@@ -438,7 +438,14 @@ def get_penalty_by_time(t):
 def starts_with(s, t):
     return s[:len(t)] == t
     
+
+def get_unofficial_teams(path):
+    f = open(path, 'r')
+    teams = f.read().split('\n')
+    return {team[1:] for team in teams}
     
+    
+unofficial_teams = get_unofficial_teams('data/kpi_open_2019/unofficial.txt')
 team_members = json.load(open('data/team_members.txt', 'r'))
 standings_title = '<p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p> <p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p>'.format(olympiad_title, olympiad_date)
 standings = Standings(show_regions=show_regions, ignore_regions=ignore_regions)
@@ -486,6 +493,9 @@ else:
         if team[:2] == 's_' or team[:1] == 's':
             region = 'School'
         team_name = team.replace('&sp&', ' ')
+        if team_name in unofficial_teams:
+            region = 'Unofficial'
+        print(region)
         team_res = Result(team_name, region, results, times, solved, penalty)
         standings.add(team_res)
 standings.set_problem_openers(problem_openers)
