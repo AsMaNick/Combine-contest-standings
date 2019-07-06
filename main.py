@@ -11,34 +11,14 @@ def bad_user(user_name):
     return user_name in ['Judge_Main', 'nan', 'judge13', 'ejudge&sp&administrator']
     
     
-statistic_team_number = 10
-path_to_scripts = '../../'
-ignore_regions = {'School'}
-show_regions = True
-olympiad_title = 'All-Ukrainian Collegiate Programming Contest'
-olympiad_date = '1<sup>st</sup> Stage Ukraine, April 13, 2019'
-links = [('http://ejudge.khai.edu/ejudge/contest180421.html', 'East')]
+from settings import *
 
-round_time = 'DOWN'
-contest_duration = 240
-problems = 6
-problem_names = [
-    'Квадрати й одиницi', 
-    'Подарунок', 
-    'Кола', 
-    'Сума', 
-    'Святкова вечеря', 
-    'Іграшки'
-]
 assert problems == len(problem_names)
-penalty_points = 20
 max_length_place = '7771777'
 
-f = open('created_tables/standings.html', 'w', encoding='utf8')
+f = open('created_tables/{}.html'.format(standings_file_name), 'w', encoding='utf8')
 all_successful_submits = {}
 
-csv_files = ['dumpruns1.csv']
-regions = ['Ukraine']
 team_regions = dict()
 problem_openers = ['' for i in range(problems)]
 time_openers = [1e9 for i in range(problems)]
@@ -51,7 +31,7 @@ if len(csv_files) > 0:
     print('<div id="submissionsLog"><!--', file=f)
     all_status = {}
     for csv_file, region in zip(csv_files, regions):
-        data = pd.read_csv('data/kpi_open_2019/' + csv_file, ';')
+        data = pd.read_csv(path_to_data + csv_file, ';')
         for it, row in tqdm(data.iterrows()):
             user_name = str(row['User_Name']).replace(' ', '&sp&', 1000000000)
             if row['Prob'][0] == '!' or bad_user(user_name):
@@ -497,14 +477,12 @@ else:
                 results.append('')
                 times.append('')
         region = 'Ukraine'
-        if team[0] == '[':
-            region = 'Romania'
-            if starts_with(team, '[BogaziciU]') or starts_with(team, 'METU-'):
-                region = 'Ukraine'
-        elif starts_with(team, 'PMF') or starts_with(team, 'NTUA-ECE') or starts_with(team, 'UBB') or starts_with(team, 'RAF') or starts_with(team, 'UTCN') or starts_with(team, 'UCV') or starts_with(team, 'UTI'):
-            region = 'Romania'
         if team in team_regions:
             region = team_regions[team]
+        for word in ['UAIC', 'Moscow', 'Vilnius', 'Loránd', 'Kaunas', 'Azerbaijan', 'Ventspils']:
+            if team.find(word) != -1:
+                region = 'Other'
+                break
         if team[:2] == 's_' or team[:1] == 's':
             region = 'School'
         team_name = team.replace('&sp&', ' ')
