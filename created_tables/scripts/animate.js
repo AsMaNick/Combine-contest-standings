@@ -323,7 +323,7 @@ function updateStandingsToTime(to_time) {
 	cur_time = to_time;
 	if (cur_submission == all_submissions.length) {
 		clearInterval(interval);
-		setTimeout(function() { updateStandingsTime('5:00:00'); filter(true) }, 3000);
+		setTimeout(function() { updateStandingsTime(timeInStr(contest_duration).substr(1, 4) + ':00'); filter(true) }, 3000);
 	}
 	statistic.prepare();
 	updateStatistic(statistic_elem[0], statistic.all_submissions);
@@ -353,9 +353,9 @@ function getContestSpeed() {
 }
 
 function updateSubmissions() {
-	var to_time = Math.min(300, cur_time + getContestSpeed());
+	var to_time = Math.min(contest_duration, cur_time + getContestSpeed());
 	if (finish_contest) {
-		to_time = 300;
+		to_time = contest_duration;
 	}
 	updateStandingsToTime(to_time);
 }
@@ -401,7 +401,7 @@ function getStartTime() {
 	var time = document.getElementById('contest_start_time').value;
 	var res = 0;
 	if ('0' <= time[0] && time[0] <= '9' && '0' <= time[2] && time[2] <= '9' && '0' <= time[3] && time[3] <= '9') {
-		res = Math.min(300, (time.charCodeAt(0) - 48) * 60 + (time.charCodeAt(2) - 48) * 10 + (time.charCodeAt(3) - 48));
+		res = Math.min(contest_duration, (time.charCodeAt(0) - 48) * 60 + (time.charCodeAt(2) - 48) * 10 + (time.charCodeAt(3) - 48));
 	}
 	var pl = '';
 	if (res % 60 < 10) {
@@ -436,7 +436,6 @@ function go() {
                 contest_duration = parseInt(data[1]);
             }
         }
-        alert(contest_duration);
     }
 	if (document.getElementById('submissionsLog') === null) {
 		for (var i = 0; i < all_teams_elem.length; ++i) {
@@ -450,7 +449,7 @@ function go() {
 			var all_ac_times = [];
 			var all_was = [];
 			for (var j = 0; j < probs.length; ++j) {
-				var last_time = 299;
+				var last_time = contest_duration - 1;
 				var prob_res = getSubmissionResult(probs[j]);
 				if (getTime(probs[j]) != '(9:99)') {
 					all_submissions.push(new Submission(id, j,
@@ -480,7 +479,7 @@ function go() {
 					++pos_ac;
 				}
 				var pos_from = pos_ac - 2;
-				if (last_time == 299) {
+				if (last_time == contest_duration - 1) {
 					--pos_from;
 				}
 				var from_time = 0;
@@ -488,7 +487,7 @@ function go() {
 					from_time = all_ac_times[pos_from];
 				}
 				var rnds;
-				if (last_time == 299) {
+				if (last_time == contest_duration - 1) {
 					rnds = new Array(wa + 1);
 					rnds[0] = 0;
 					for (var k = 1; k <= wa; ++k) {
@@ -498,7 +497,7 @@ function go() {
 				}
 				for (var k = 1; k <= wa; ++k) {
 					var coef = k / (k + 1);
-					if (last_time == 299) {
+					if (last_time == contest_duration - 1) {
 						coef += rnds[k];
 						coef = Math.max(coef, 0);
 						coef = Math.min(coef, 1);
@@ -575,7 +574,7 @@ function go() {
 	statistic_elem = document.getElementsByClassName('submissions_statistic');
 	contest_penalty = getPenalty();
 	updateStandingsToTime(getStartTime());
-	if (cur_time < 300) {
+	if (cur_time < contest_duration) {
 		interval = setInterval(updateSubmissions, 5000);
 	}
 }
