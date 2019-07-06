@@ -19,20 +19,16 @@ olympiad_title = 'All-Ukrainian Collegiate Programming Contest'
 olympiad_date = '1<sup>st</sup> Stage Ukraine, April 13, 2019'
 links = [('http://ejudge.khai.edu/ejudge/contest180421.html', 'East')]
 
-problems = 12
+round_time = 'DOWN'
+contest_duration = 240
+problems = 6
 problem_names = [
-    'Цукерки', 
-    'Врятуйте команди', 
-    'Горiшки', 
-    'Клас', 
-    'Конференцiя', 
-    'Роздiл майна', 
-    'Перефарбуйте кульку', 
-    'Вибори', 
-    'Правила', 
-    'Пiдготувати промову', 
-    'Метро', 
-    'Дисквалiфiкацiя'
+    'Квадрати й одиницi', 
+    'Подарунок', 
+    'Кола', 
+    'Сума', 
+    'Святкова вечеря', 
+    'Іграшки'
 ]
 assert problems == len(problem_names)
 penalty_points = 20
@@ -41,18 +37,21 @@ max_length_place = '7771777'
 f = open('created_tables/standings.html', 'w', encoding='utf8')
 all_successful_submits = {}
 
-csv_files = ['west.csv', 'east.csv', 'center.csv', 'dnipro.csv', 'north.csv', 'sw.csv', 'south.csv']
-regions = ['West', 'East', 'Center', 'Center', 'North', 'South-West', 'South']
+csv_files = ['dumpruns1.csv']
+regions = ['Ukraine']
 team_regions = dict()
 problem_openers = ['' for i in range(problems)]
 time_openers = [1e9 for i in range(problems)]
 
+print('<div id="standingsSettings"><!--', file=f)
+print('contestDuration {}'.format(contest_duration), file=f)
+print('--></div>', file=f)
 if len(csv_files) > 0:
     import pandas as pd
     print('<div id="submissionsLog"><!--', file=f)
     all_status = {}
     for csv_file, region in zip(csv_files, regions):
-        data = pd.read_csv('data/2019_1/' + csv_file, ';')
+        data = pd.read_csv('data/kpi_open_2019/' + csv_file, ';')
         for it, row in tqdm(data.iterrows()):
             user_name = str(row['User_Name']).replace(' ', '&sp&', 1000000000)
             if row['Prob'][0] == '!' or bad_user(user_name):
@@ -63,7 +62,7 @@ if len(csv_files) > 0:
             minute = int(row['Dur_Min'])
             second = int(row['Dur_Sec'])
             time_in_seconds = hour * 3600 + minute * 60 + second
-            if second != 0:
+            if second != 0 and round_time == 'UP':
                 minute += 1
                 if minute == 60:
                     hour += 1
@@ -118,6 +117,12 @@ def get_problem_title(problem_id):
     if problem_id < len(problem_names):
         return chr(ord('A') + problem_id) + ' - ' + problem_names[problem_id]
     return ''
+    
+    
+def get_time_str(time):
+    h = time // 60
+    m = time % 60
+    return '{:1d}:{:02d}:00'.format(h, m)
     
     
 class Result:
@@ -334,7 +339,7 @@ class Standings:
         print('</tr>', file=f)
         print('</table>', file=f)
 
-        print('<center style="font-size: 25px" id="standings_time"> Standings [5:00:00] </center>', file=f)
+        print('<center style="font-size: 25px" id="standings_time"> Standings [{}] </center>'.format(get_time_str(contest_duration)), file=f)
         print('<table style="border-collapse: separate; border-spacing: 1px;" width="100%" class="standings">', file=f)
         print('<tr>', file=f)
         print('<th class="st_place">{}</th>'.format('Place'), file=f)

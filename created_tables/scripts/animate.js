@@ -1,4 +1,5 @@
 var contest_penalty = 20;
+var contest_duration = 300;
 var num = 0;
 var all_teams_elem, all_place_elem, all_total_elem, all_penalty_elem, all_dirt_elem;
 var mn_y, start_y, height, margin_y;
@@ -423,6 +424,20 @@ function go() {
 	var id = -1;
 	var time_start = Date.now();
 	was_submission = new Array(all_teams_elem.length);
+    if (document.getElementById('standingsSettings') === null) {
+        contest_duration = 300;
+    } else {
+        var settings = document.getElementById('standingsSettings').innerHTML;
+        settings = settings.substr(5, settings.length - 8);
+        params = settings.split('\n');
+        for (var i = 0; i < params.length; ++i) {
+            var data = params[i].split(' ');
+            if (data[0] == 'contestDuration') {
+                contest_duration = parseInt(data[1]);
+            }
+        }
+        alert(contest_duration);
+    }
 	if (document.getElementById('submissionsLog') === null) {
 		for (var i = 0; i < all_teams_elem.length; ++i) {
 			if (all_teams_elem[i].hidden) {
