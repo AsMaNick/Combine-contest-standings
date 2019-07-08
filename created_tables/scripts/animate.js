@@ -365,6 +365,8 @@ function finish() {
 		if (document.getElementById('pause').innerHTML == "Continue") {
 			pause();
 		}
+        clearInterval(interval);
+        interval = setInterval(updateSubmissions, 500);
 		finish_contest = true;
 	}
 }
@@ -376,8 +378,9 @@ function pause() {
 			clearInterval(interval);
 			elem.innerHTML = "Continue";
 		} else {
-			interval = setInterval(updateSubmissions, 5000);
 			elem.innerHTML = "Pause";
+            updateSubmissions();
+			interval = setInterval(updateSubmissions, 5000);
 		}
 	}
 }
