@@ -2,23 +2,33 @@
 path_to_scripts = '../../'
 ignore_regions = {'School'}
 show_regions = True
-olympiad_title = 'International olympiad in informatics KPI-OPEN'
-olympiad_date = '1<sup>st</sup> tour, July 2, 2019'
+olympiad_title = 'The summer programming school, Uzhgorod-2019'
+olympiad_date = '3<sup>rd</sup> tour, August 11, 2019'
 links = [('http://ejudge.khai.edu/ejudge/contest180421.html', 'East')]
 
-round_time = 'DOWN'
-contest_duration = 240
-problems = 6
+round_time = 'UP'
+contest_duration = 300
+problems = 11
 problem_names = [
-    'Квадрати й одиницi', 
-    'Подарунок', 
-    'Кола', 
-    'Сума', 
-    'Святкова вечеря', 
-    'Іграшки'
+    'Школа танців',
+    'Розбиття кола',
+    'Сума степенів',
+    'Фарбування паркану',
+    'Продовжіть послідовність',
+    'Непарні підпрямокутники',
+    'Гарні дерева',
+    'Ще одна сума (easy)',
+    'Ще одна сума (hard)',
+    'Намисто',
+    'Підрахунок різних доданків'
 ]
+problem_ids = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H1', 'H2', 'I', 'J']
+
 penalty_points = 20
-csv_files = ['dumpruns1.csv']
+ignore_compilation_error = False
+csv_files = ['day3.csv']
 regions = ['Ukraine']
-path_to_data ='data/kpi_open_2019/'
-standings_file_name = 'kpi_open_2019_1'
+path_to_data = 'data/uzhgorod/'
+path_to_team_members = 'data/uzhgorod/team_members.txt' # empty string for ignore
+path_to_unofficial_teams = '' # empty string for ignore
+standings_file_name = 'uzhgorod_3'

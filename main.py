@@ -37,11 +37,13 @@ if len(csv_files) > 0:
             if row['Prob'][0] == '!' or bad_user(user_name):
                 print('Ignoring', it, row['Run_Id'], row['Prob'], user_name)
                 continue
-            prob_id = ord(row['Prob']) - ord('A')
+            prob_id = problem_ids.index(row['Prob'])
             hour = int(row['Dur_Hour'])
             minute = int(row['Dur_Min'])
             second = int(row['Dur_Sec'])
             time_in_seconds = hour * 3600 + minute * 60 + second
+            if time_in_seconds > contest_duration * 60:
+                continue
             if second != 0 and round_time == 'UP':
                 minute += 1
                 if minute == 60:
@@ -50,7 +52,7 @@ if len(csv_files) > 0:
             time = '({}:{}{})'.format(hour, minute // 10, minute % 10)
             status = row['Stat_Short']
             team_regions[user_name] = region
-            if status == 'CE':
+            if status == 'CE' and ignore_compilation_error:
                 continue
             p = (user_name, prob_id)
             wrong_attempts = 0
@@ -95,7 +97,7 @@ def is_digit(x):
 
 def get_problem_title(problem_id):
     if problem_id < len(problem_names):
-        return chr(ord('A') + problem_id) + ' - ' + problem_names[problem_id]
+        return problem_ids[problem_id] + ' - ' + problem_names[problem_id]
     return ''
     
     
@@ -326,7 +328,7 @@ class Standings:
         print('<th class="st_team" style="min-width: 185px">{}</th>'.format('User'), file=f)
         print('<th class="st_extra">{}</th>'.format('Region'), file=f)
         for prob_id in range(problems):
-            print('<th title="{}" class="st_prob" style="min-width: 32px">{}</th>'.format(get_problem_title(prob_id), chr(ord('A') + prob_id)), file=f)
+            print('<th title="{}" class="st_prob" style="min-width: 32px">{}</th>'.format(get_problem_title(prob_id), problem_ids[prob_id]), file=f)
         print('<th  class="st_total">{}</th>'.format('Total'), file=f)
         print('<th  class="st_pen">{}</th>'.format('Penalty'), file=f)
         print('<th  class="st_pen">{}</th>'.format('Dirt'), file=f)
@@ -442,12 +444,19 @@ def starts_with(s, t):
 def get_unofficial_teams(path):
     f = open(path, 'r')
     teams = f.read().split('\n')
-    return {team[1:] for team in teams}
+    return {team[1:] for team in teams[1:]}
     
     
-unofficial_teams = get_unofficial_teams('data/kpi_open_2019/unofficial.txt')
-team_members = json.load(open('data/team_members.txt', 'r'))
-standings_title = '<p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p> <p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p>'.format(olympiad_title, olympiad_date)
+unofficial_teams = []
+team_members = {}
+if path_to_team_members != '':
+    team_members = json.load(open(path_to_team_members, 'r'))
+if path_to_unofficial_teams != '':
+    unofficial_teams = get_unofficial_teams(path_to_unofficial_teams)
+    
+standings_title = '<p align="center" style="font-family: times-new-roman"> \
+    <a style="float: left; margin: 13px; padding-left: 7px" href="../../index.html"> <img width="30px" src="../../images/back_arrow.png"></a> \
+    <font size="7"> {} </font> </p> <p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p>'.format(olympiad_title, olympiad_date)
 standings = Standings(show_regions=show_regions, ignore_regions=ignore_regions)
 if len(csv_files) == 0:
     for link, region in links:
@@ -455,6 +464,7 @@ if len(csv_files) == 0:
         r = requests.post(link)
         process(r.content, region)
 else:
+    team_regions['GeorgianSU'] = 'Georgia'
     all_teams = {x[0] for x in all_status}
     for x in all_successful_submits:
         all_teams.add(x[0])
@@ -495,7 +505,6 @@ else:
         team_name = team.replace('&sp&', ' ')
         if team_name in unofficial_teams:
             region = 'Unofficial'
-        print(region)
         team_res = Result(team_name, region, results, times, solved, penalty)
         standings.add(team_res)
 standings.set_problem_openers(problem_openers)
