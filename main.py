@@ -455,8 +455,8 @@ if path_to_unofficial_teams != '':
     unofficial_teams = get_unofficial_teams(path_to_unofficial_teams)
     
 standings_title = '<p align="center" style="font-family: times-new-roman"> \
-    <a style="float: left; margin: 13px; padding-left: 7px" href="../../index.html"> <img width="30px" src="../../images/back_arrow.png"></a> \
-    <font size="7"> {} </font> </p> <p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p>'.format(olympiad_title, olympiad_date)
+    <a style="float: left; margin: 13px; padding-left: 7px" href="../../"> <img width="30px" src="{}images/back_arrow.png"></a> \
+    <font size="7"> {} </font> </p> <p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p>'.format(path_to_scripts, olympiad_title, olympiad_date)
 standings = Standings(show_regions=show_regions, ignore_regions=ignore_regions)
 if len(csv_files) == 0:
     for link, region in links:
@@ -501,7 +501,8 @@ else:
                 region = 'Other'
                 break
         if team[:2] == 's_' or team[:1] == 's':
-            region = 'School'
+            #region = 'School'
+            pass
         team_name = team.replace('&sp&', ' ')
         if team_name in unofficial_teams:
             region = 'Unofficial'
