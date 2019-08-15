@@ -52,7 +52,7 @@ if len(csv_files) > 0:
             time = '({}:{}{})'.format(hour, minute // 10, minute % 10)
             status = row['Stat_Short']
             team_regions[user_name] = region
-            if status == 'CE' and ignore_compilation_error:
+            if status == 'IG' or (status == 'CE' and ignore_compilation_error):
                 continue
             p = (user_name, prob_id)
             wrong_attempts = 0
