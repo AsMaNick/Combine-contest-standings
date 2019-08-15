@@ -423,10 +423,10 @@ function go() {
     if (document.location.href.indexOf('time_delay=') != -1) {
         var pos = document.location.href.indexOf('time_delay=');
         time_delay = parseInt(document.location.href.substr(pos + 11));
-        if (time !== time_delay) {
-            time = 5000;
+        if (time_delay !== time_delay) {
+            time_delay = 5000;
         }
-        time = Math.max(time, 500);
+        time_delay = Math.max(time_delay, 500);
     }
     finish_contest = false;
     is_animation = true;
