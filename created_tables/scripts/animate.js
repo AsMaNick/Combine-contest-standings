@@ -1,3 +1,4 @@
+var time_delay = 5000;
 var contest_penalty = 20;
 var contest_duration = 300;
 var num = 0;
@@ -380,7 +381,7 @@ function pause() {
         } else {
             elem.innerHTML = "Pause";
             updateSubmissions();
-            interval = setInterval(updateSubmissions, 5000);
+            interval = setInterval(updateSubmissions, time_delay);
         }
     }
 }
@@ -417,6 +418,15 @@ function getStartTime() {
 function go() {
     if (!loaded || is_animation) {
         return;
+    }
+    time_delay = 5000;
+    if (document.location.href.indexOf('time_delay=') != -1) {
+        var pos = document.location.href.indexOf('time_delay=');
+        time_delay = parseInt(document.location.href.substr(pos + 11));
+        if (time !== time_delay) {
+            time = 5000;
+        }
+        time = Math.max(time, 500);
     }
     finish_contest = false;
     is_animation = true;
@@ -578,6 +588,6 @@ function go() {
     contest_penalty = getPenalty();
     updateStandingsToTime(getStartTime());
     if (cur_time < contest_duration) {
-        interval = setInterval(updateSubmissions, 5000);
+        interval = setInterval(updateSubmissions, time_delay);
     }
 }
