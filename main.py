@@ -444,7 +444,7 @@ def starts_with(s, t):
 def get_unofficial_teams(path):
     f = open(path, 'r')
     teams = f.read().split('\n')
-    return {team[1:] for team in teams[1:]}
+    return {team for team in teams}
     
     
 unofficial_teams = []
@@ -453,7 +453,9 @@ if path_to_team_members != '':
     team_members = json.load(open(path_to_team_members, 'r'))
 if path_to_unofficial_teams != '':
     unofficial_teams = get_unofficial_teams(path_to_unofficial_teams)
-    
+if path_to_team_regions != '':
+    team_regions = json.load(open(path_to_team_regions, 'r'))
+
 standings_title = '<p align="center" style="font-family: times-new-roman"> \
     <a style="float: left; margin: 13px; padding-left: 7px" href="../../"> <img width="30px" src="{}images/back_arrow.png"></a> \
     <font size="7"> {} </font> </p> <p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p>'.format(path_to_scripts, olympiad_title, olympiad_date)
@@ -496,12 +498,14 @@ else:
         region = 'Ukraine'
         if team in team_regions:
             region = team_regions[team]
+        elif team.replace('&sp&', ' ') in team_regions:
+            region = team_regions[team.replace('&sp&', ' ')]
         for word in ['UAIC', 'Moscow', 'Vilnius', 'Loránd', 'Kaunas', 'Azerbaijan', 'Ventspils']:
             if team.find(word) != -1:
                 region = 'Other'
                 break
         if team[:2] == 's_' or team[:1] == 's':
-            #region = 'School'
+            region = 'School'
             pass
         team_name = team.replace('&sp&', ' ')
         if team_name in unofficial_teams:

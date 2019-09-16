@@ -45,8 +45,10 @@ def get_wa_times(last, cnt):
         
     
 def process(input_file):
+    parse_regions = True
     inf = open(input_file + '.html', 'rb')
     ouf = open(input_file + '.csv', 'w', encoding='utf8')
+    ouf_regions = open(input_file + '_regions.json', 'w', encoding='utf8')
     keys = ['Run_Id', 'User_Name', 'Prob', 'Dur_Hour', 'Dur_Min', 'Dur_Sec', 'Stat_Short']
     for key in keys:
         print(key, end=';', file=ouf)
@@ -54,13 +56,25 @@ def process(input_file):
     text = inf.read()
     text = codecs.decode(text, 'utf-8-sig')
     pos = text.find('<tr>') + 1
+    pos = text.find('<tr>') + 1
+    pos = text.find('<tr>') + 1
+    pos = text.find('<tr>') + 1
     submissions = []
+    team_regions = dict()
     while True:
         pos = text.find('<tr>', pos)
         if pos == -1:
             break
         pos = text.find('<td', pos) + 1
         pos = text.find('<td', pos) + 1
+        
+        if parse_regions:
+            user_name = text[pos + 3:text.find('</td>', pos)]
+            pos = text.find('<td', pos) + 1
+            region = text[pos + 3:text.find('</td>', pos)]
+            team_regions[user_name] = region
+            continue
+            
         pos = text.find('<p>', pos)
         pos_to = text.find('</p>', pos)
         user_name = text[pos + 3:pos_to].replace('&amp;', '&').replace('&quot;', '"').replace('&sp&', ' ')
@@ -95,6 +109,7 @@ def process(input_file):
                 wa_times = get_wa_times(299, cnt)
                 for wa in wa_times:
                     submissions.append(Submission(len(submissions), user_name, chr(ord('A') + i), wa[0], wa[1], 0, 'WA'))
+    json.dump(team_regions, ouf_regions)
     submissions.sort()
     for submission in submissions:
         submission.write(ouf)
@@ -103,4 +118,4 @@ def process(input_file):
     
 
 problems = 12
-process('data/west')
+process('data/2019_2/results')
