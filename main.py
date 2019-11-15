@@ -37,6 +37,7 @@ if len(csv_files) > 0:
             if row['Prob'][0] == '!' or bad_user(user_name):
                 print('Ignoring', it, row['Run_Id'], row['Prob'], user_name)
                 continue
+            user_name = user_name.replace('[Bucharest_site]&sp&', '')
             prob_id = problem_ids.index(row['Prob'])
             hour = int(row['Dur_Hour'])
             minute = int(row['Dur_Min'])
@@ -292,6 +293,7 @@ class Standings:
             print('<link rel="stylesheet" href="{}styles/unpriv.css" type="text/css" />'.format(path_to_scripts), file=f)
             print('<link rel="stylesheet" href="{}styles/unpriv3.css" type="text/css" />'.format(path_to_scripts), file=f)
             print('<link rel="stylesheet" href="{}styles/animate.css" type="text/css" />'.format(path_to_scripts), file=f)
+            print('<link rel="stylesheet" href="{}styles/styles.css" type="text/css" />'.format(path_to_scripts), file=f)
             print('<style id="styles"> table.standings td { height: 40px; } </style>', file=f)
         else:
             print('<link rel="stylesheet" href="http://ejudge.khai.edu/ejudge/unpriv.css" type="text/css" />', file=f)
@@ -322,6 +324,9 @@ class Standings:
         print('</table>', file=f)
 
         print('<center style="font-size: 25px" id="standings_time"> Standings [{}] </center>'.format(get_time_str(contest_duration)), file=f)
+        
+        print('<input type="range" min="0" max="{}" value="{}" class="slider" id="slider" onmousedown="sliderMouseDown()" onmouseup="sliderMouseUp()">'.format(contest_duration, contest_duration), file=f)
+        
         print('<table style="border-collapse: separate; border-spacing: 1px;" width="100%" class="standings">', file=f)
         print('<tr>', file=f)
         print('<th class="st_place">{}</th>'.format('Place'), file=f)
@@ -500,14 +505,16 @@ else:
             region = team_regions[team]
         elif team.replace('&sp&', ' ') in team_regions:
             region = team_regions[team.replace('&sp&', ' ')]
-        for word in ['UAIC', 'Moscow', 'Vilnius', 'Loránd', 'Kaunas', 'Azerbaijan', 'Ventspils']:
+        for word in []:
             if team.find(word) != -1:
                 region = 'Other'
                 break
         if team[:2] == 's_' or team[:1] == 's':
-            region = 'School'
+            #region = 'School'
             pass
         team_name = team.replace('&sp&', ' ')
+        if team_name[:11] == '_____*Polit':
+            continue
         if team_name in unofficial_teams:
             region = 'Unofficial'
         team_res = Result(team_name, region, results, times, solved, penalty)

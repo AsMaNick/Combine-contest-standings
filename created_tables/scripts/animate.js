@@ -13,7 +13,8 @@ var is_animation = false;
 var finish_contest = false;
 var was_submission, was_wa_modified, last_wa_parity, problems;
 var statistic_elem;
-            
+var slider_pressed = false;
+
 function Submission(id, problem_id, time, result, is_opener, elem) {
     this.id = id;
     this.problem_id = problem_id;
@@ -256,6 +257,9 @@ function updateStandingsToTime(to_time) {
     console.log(cur_time, to_time);
     var to_time_str = timeInStr(to_time);
     updateStandingsTime(to_time_str.substr(1, 4) + ':00');
+    if (!slider_pressed) {
+        document.getElementById('slider').value = to_time;
+    }
     all_results.sort(compareById);
     for (var i = 0; i < was_submission.length; ++i) {
         was_submission[i] = 0;
@@ -322,7 +326,7 @@ function updateStandingsToTime(to_time) {
         to_y += height[id] + margin_y[i];
     }
     cur_time = to_time;
-    if (cur_submission == all_submissions.length) {
+    if (cur_submission == all_submissions.length && document.getElementsByTagName('button')[0].disabled) {
         clearInterval(interval);
         setTimeout(function() { updateStandingsTime(timeInStr(contest_duration).substr(1, 4) + ':00'); filter(true) }, 3000);
     }
@@ -415,8 +419,8 @@ function getStartTime() {
     return res;
 }
 
-function go() {
-    if (!loaded || is_animation) {
+function go(only_init) {
+    if (!loaded || (is_animation && only_init === undefined)) {
         return;
     }
     time_delay = 5000;
@@ -430,138 +434,167 @@ function go() {
     }
     finish_contest = false;
     is_animation = true;
-    disableRegions(true);
-    fillY();
-    all_submissions = [];
-    all_results = new Array();
-    var id = -1;
-    var time_start = Date.now();
-    was_submission = new Array(all_teams_elem.length);
-    if (document.getElementById('standingsSettings') === null) {
-        contest_duration = 300;
-    } else {
-        var settings = document.getElementById('standingsSettings').innerHTML;
-        settings = settings.substr(5, settings.length - 8);
-        params = settings.split('\n');
-        for (var i = 0; i < params.length; ++i) {
-            var data = params[i].split(' ');
-            if (data[0] == 'contestDuration') {
-                contest_duration = parseInt(data[1]);
-            }
+    var need_update = true;
+    if (document.getElementsByClassName('row_region')[0].getElementsByTagName('input')[0].disabled) {
+        need_update = false;
+        if (!only_init) {
+            document.getElementsByTagName('button')[0].disabled = true;
         }
     }
-    if (document.getElementById('submissionsLog') === null) {
-        for (var i = 0; i < all_teams_elem.length; ++i) {
-            if (all_teams_elem[i].hidden) {
-                continue;
+    var time_start = Date.now();
+    all_results = new Array();
+    was_submission = new Array(all_teams_elem.length);
+    if (need_update) {
+        disableRegions(true);
+        if (only_init) {
+            document.getElementsByTagName('button')[0].disabled = false;
+        }
+        fillY();
+        all_submissions = [];
+        var id = -1;
+        if (document.getElementById('standingsSettings') === null) {
+            contest_duration = 300;
+        } else {
+            var settings = document.getElementById('standingsSettings').innerHTML;
+            settings = settings.substr(5, settings.length - 8);
+            params = settings.split('\n');
+            for (var i = 0; i < params.length; ++i) {
+                var data = params[i].split(' ');
+                if (data[0] == 'contestDuration') {
+                    contest_duration = parseInt(data[1]);
+                }
             }
-            all_teams_elem[i].style = "transition: transform 1s ease-in-out 0ms, opacity 1s ease-in-out 0ms;";
-            id += 1;
-            all_results.push(new Result(i));
-            var probs = all_teams_elem[i].getElementsByClassName('st_prob');
-            var all_ac_times = [];
-            var all_was = [];
-            for (var j = 0; j < probs.length; ++j) {
-                var last_time = contest_duration - 1;
-                var prob_res = getSubmissionResult(probs[j]);
-                if (getTime(probs[j]) != '(9:99)') {
-                    all_submissions.push(new Submission(id, j,
-                                                        getTime(probs[j]), 
-                                                        prob_res, 
-                                                        probs[j].style.background == 'rgb(176, 255, 176)', 
-                                                        probs[j]));
-                    last_time = Math.max(0, timeInMinutes(getTime(probs[j])) - 1);
-                    all_ac_times.push(timeInMinutes(getTime(probs[j])));
+        }
+        if (document.getElementById('submissionsLog') === null) {
+            for (var i = 0; i < all_teams_elem.length; ++i) {
+                if (all_teams_elem[i].hidden) {
+                    continue;
                 }
-                if (prob_res.length > 1 && (prob_res[0] == '+' || prob_res[0] == '-')) {
-                    var wa = parseInt(prob_res.substr(1));
-                    all_was.push([last_time, wa, j, probs[j]]);
-                }
-                probs[j].innerHTML = '&nbsp';
-                probs[j].style = '';
-            }
-            all_ac_times.sort(function(x, y) { return x - y; } );
-            all_was.sort(function(x, y) { return x[0] - y[0]; } );
-            var pos_ac = 0;
-            for (var j = 0; j < all_was.length; ++j) {
-                var last_time = all_was[j][0];
-                var wa = all_was[j][1];
-                var problem_id = all_was[j][2];
-                var elem = all_was[j][3];
-                while (pos_ac < all_ac_times.length && all_ac_times[pos_ac] <= last_time) {
-                    ++pos_ac;
-                }
-                var pos_from = pos_ac - 2;
-                if (last_time == contest_duration - 1) {
-                    --pos_from;
-                }
-                var from_time = 0;
-                if (pos_from >= 0) {
-                    from_time = all_ac_times[pos_from];
-                }
-                var rnds;
-                if (last_time == contest_duration - 1) {
-                    rnds = new Array(wa + 1);
-                    rnds[0] = 0;
-                    for (var k = 1; k <= wa; ++k) {
-                        rnds[k] = (Math.random() - 0.5) * 0.2
+                all_teams_elem[i].style = "transition: transform 1s ease-in-out 0ms, opacity 1s ease-in-out 0ms;";
+                id += 1;
+                all_results.push(new Result(i));
+                var probs = all_teams_elem[i].getElementsByClassName('st_prob');
+                var all_ac_times = [];
+                var all_was = [];
+                for (var j = 0; j < probs.length; ++j) {
+                    var last_time = contest_duration - 1;
+                    var prob_res = getSubmissionResult(probs[j]);
+                    if (getTime(probs[j]) != '(9:99)') {
+                        all_submissions.push(new Submission(id, j,
+                                                            getTime(probs[j]), 
+                                                            prob_res, 
+                                                            probs[j].style.background == 'rgb(176, 255, 176)', 
+                                                            probs[j]));
+                        last_time = Math.max(0, timeInMinutes(getTime(probs[j])) - 1);
+                        all_ac_times.push(timeInMinutes(getTime(probs[j])));
                     }
-                    rnds.sort(function(a, b) { return a - b; });
+                    if (prob_res.length > 1 && (prob_res[0] == '+' || prob_res[0] == '-')) {
+                        var wa = parseInt(prob_res.substr(1));
+                        all_was.push([last_time, wa, j, probs[j]]);
+                    }
+                    probs[j].innerHTML = '&nbsp';
+                    probs[j].style = '';
                 }
-                for (var k = 1; k <= wa; ++k) {
-                    var coef = k / (k + 1);
+                all_ac_times.sort(function(x, y) { return x - y; } );
+                all_was.sort(function(x, y) { return x[0] - y[0]; } );
+                var pos_ac = 0;
+                for (var j = 0; j < all_was.length; ++j) {
+                    var last_time = all_was[j][0];
+                    var wa = all_was[j][1];
+                    var problem_id = all_was[j][2];
+                    var elem = all_was[j][3];
+                    while (pos_ac < all_ac_times.length && all_ac_times[pos_ac] <= last_time) {
+                        ++pos_ac;
+                    }
+                    var pos_from = pos_ac - 2;
                     if (last_time == contest_duration - 1) {
-                        coef += rnds[k];
-                        coef = Math.max(coef, 0);
-                        coef = Math.min(coef, 1);
+                        --pos_from;
                     }
-                    var time = parseInt(from_time + (last_time - from_time) * coef);
-                    all_submissions.push(new Submission(id, problem_id,
-                                                        timeInStr(time), 
-                                                        '-' + k.toString(), 
-                                                        false, 
-                                                        elem));
+                    var from_time = 0;
+                    if (pos_from >= 0) {
+                        from_time = all_ac_times[pos_from];
+                    }
+                    var rnds;
+                    if (last_time == contest_duration - 1) {
+                        rnds = new Array(wa + 1);
+                        rnds[0] = 0;
+                        for (var k = 1; k <= wa; ++k) {
+                            rnds[k] = (Math.random() - 0.5) * 0.2
+                        }
+                        rnds.sort(function(a, b) { return a - b; });
+                    }
+                    for (var k = 1; k <= wa; ++k) {
+                        var coef = k / (k + 1);
+                        if (last_time == contest_duration - 1) {
+                            coef += rnds[k];
+                            coef = Math.max(coef, 0);
+                            coef = Math.min(coef, 1);
+                        }
+                        var time = parseInt(from_time + (last_time - from_time) * coef);
+                        all_submissions.push(new Submission(id, problem_id,
+                                                            timeInStr(time), 
+                                                            '-' + k.toString(), 
+                                                            false, 
+                                                            elem));
+                    }
+                }
+                updateDirt(i, '0.00');
+                updateTotal(i, 0);
+                updatePenalty(i, 0);
+            }
+        } else {
+            var team_ids = {};
+            var probs = new Array(all_teams_elem.length);
+            var is_opener = new Array(all_teams_elem.length);
+            for (var i = 0; i < all_teams_elem.length; ++i) {
+                if (all_teams_elem[i].hidden) {
+                    continue;
+                }
+                id += 1;
+                var team_name = all_teams_elem[i].getElementsByClassName('st_team')[0].innerHTML;
+                team_ids[team_name] = id;
+                probs[id] = all_teams_elem[i].getElementsByClassName('st_prob');
+                all_teams_elem[i].style = "transition: transform 1s ease-in-out 0ms, opacity 1s ease-in-out 0ms;";
+                all_results.push(new Result(i));
+                updateDirt(i, '0.00');
+                updateTotal(i, 0);
+                updatePenalty(i, 0);
+                is_opener[id] = new Array(probs[id].length);
+                for (var j = 0; j < probs[id].length; ++j) {
+                    is_opener[id][j] = probs[id][j].style.background == 'rgb(176, 255, 176)';
+                    probs[id][j].innerHTML = '&nbsp';
+                    probs[id][j].style = '';
                 }
             }
-            updateDirt(i, '0.00');
-            updateTotal(i, 0);
-            updatePenalty(i, 0);
+            var submissionsData = parseSubmisions();
+            for (var submission of submissionsData) {
+                if (submission[0] in team_ids) {
+                    var id = team_ids[submission[0]];
+                    var problem_id = submission[1];
+                    all_submissions.push(new Submission(id,
+                                                        problem_id,
+                                                        submission[2], // timeInStr
+                                                        submission[3], // result
+                                                        is_opener[id][problem_id],
+                                                        probs[id][problem_id]));
+                }
+            }
         }
     } else {
-        var team_ids = {};
-        var probs = new Array(all_teams_elem.length);
-        var is_opener = new Array(all_teams_elem.length);
         for (var i = 0; i < all_teams_elem.length; ++i) {
             if (all_teams_elem[i].hidden) {
                 continue;
             }
-            id += 1;
-            var team_name = all_teams_elem[i].getElementsByClassName('st_team')[0].innerHTML;
-            team_ids[team_name] = id;
-            probs[id] = all_teams_elem[i].getElementsByClassName('st_prob');
+            var probs = all_teams_elem[i].getElementsByClassName('st_prob');
             all_teams_elem[i].style = "transition: transform 1s ease-in-out 0ms, opacity 1s ease-in-out 0ms;";
             all_results.push(new Result(i));
             updateDirt(i, '0.00');
             updateTotal(i, 0);
             updatePenalty(i, 0);
-            is_opener[id] = new Array(probs[id].length);
-            for (var j = 0; j < probs[id].length; ++j) {
-                is_opener[id][j] = probs[id][j].style.background == 'rgb(176, 255, 176)';
-                probs[id][j].innerHTML = '&nbsp';
-                probs[id][j].style = '';
-            }
-        }
-        var submissionsData = parseSubmisions();
-        for (var submission of submissionsData) {
-            if (submission[0] in team_ids) {
-                var id = team_ids[submission[0]];
-                var problem_id = submission[1];
-                all_submissions.push(new Submission(id,
-                                                    problem_id,
-                                                    submission[2], // timeInStr
-                                                    submission[3], // result
-                                                    is_opener[id][problem_id],
-                                                    probs[id][problem_id]));
+            console.log(i);
+            for (var j = 0; j < probs.length; ++j) {
+                probs[j].innerHTML = '&nbsp';
+                probs[j].style = '';
             }
         }
     }
@@ -587,7 +620,33 @@ function go() {
     statistic_elem = document.getElementsByClassName('submissions_statistic');
     contest_penalty = getPenalty();
     updateStandingsToTime(getStartTime());
-    if (cur_time < contest_duration) {
+    if (!only_init && cur_time < contest_duration) {
         interval = setInterval(updateSubmissions, time_delay);
+    } else if (document.getElementById('pause').innerHTML == "Pause") {
+        is_animation = false;
+    }
+}
+
+function sliderMouseDown() {
+    slider_pressed = true;
+}
+
+function sliderMouseUp() {
+    slider_pressed = false;
+    if (is_animation) {
+        clearInterval(interval);
+        var start_time = document.getElementById('slider').value;
+        var old_start_time = document.getElementById('contest_start_time').value;
+        document.getElementById('contest_start_time').value = timeInStr(start_time).substr(1, 4) + ':00';
+        go(document.getElementById('pause').innerHTML == "Continue");
+        document.getElementById('contest_start_time').value = old_start_time;
+        /*updateStandingsToTime(start_time);
+        if (cur_time < contest_duration) {
+            interval = setInterval(updateSubmissions, time_delay);
+        }*/
+    } else {
+        var start_time = document.getElementById('slider').value;
+        document.getElementById('contest_start_time').value = timeInStr(start_time).substr(1, 4) + ':00';
+        go(true);
     }
 }
