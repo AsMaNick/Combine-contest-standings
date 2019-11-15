@@ -258,7 +258,10 @@ function updateStandingsToTime(to_time) {
     var to_time_str = timeInStr(to_time);
     updateStandingsTime(to_time_str.substr(1, 4) + ':00');
     if (!slider_pressed) {
-        document.getElementById('slider').value = to_time;
+        var slider = document.getElementById('slider');
+        if (slider) {
+            slider.value = to_time;
+        }
     }
     all_results.sort(compareById);
     for (var i = 0; i < was_submission.length; ++i) {
