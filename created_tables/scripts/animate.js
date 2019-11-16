@@ -261,6 +261,7 @@ function updateStandingsToTime(to_time) {
         var slider = document.getElementById('slider');
         if (slider) {
             slider.value = to_time;
+            updateSliderFill();
         }
     }
     all_results.sort(compareById);
@@ -628,6 +629,12 @@ function go(only_init) {
     } else if (document.getElementById('pause').innerHTML == "Pause") {
         is_animation = false;
     }
+}
+
+function updateSliderFill() {
+    var slider = document.getElementById('slider');
+    var fill = 100 * slider.value / slider.max;
+    slider.style.background = "linear-gradient(to right, #4CAF50 0%, #4CAF50 " + fill.toString() + "%, #d3d3d3 " + fill.toString() + "%, #d3d3d3 100%)";
 }
 
 function sliderMouseDown() {

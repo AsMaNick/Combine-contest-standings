@@ -325,7 +325,7 @@ class Standings:
 
         print('<center style="font-size: 25px" id="standings_time"> Standings [{}] </center>'.format(get_time_str(contest_duration)), file=f)
         
-        print('<input type="range" min="0" max="{}" value="{}" class="slider" id="slider" onmousedown="sliderMouseDown()" onmouseup="sliderMouseUp()">'.format(contest_duration, contest_duration), file=f)
+        print('<input type="range" min="0" max="{}" value="{}" class="slider" id="slider" oninput="updateSliderFill()" onchange="updateSliderFill()" onmousedown="sliderMouseDown()" onmouseup="sliderMouseUp()">'.format(contest_duration, contest_duration), file=f)
         
         print('<table style="border-collapse: separate; border-spacing: 1px;" width="100%" class="standings">', file=f)
         print('<tr>', file=f)
