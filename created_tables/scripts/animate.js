@@ -330,9 +330,13 @@ function updateStandingsToTime(to_time) {
         to_y += height[id] + margin_y[i];
     }
     cur_time = to_time;
-    if (cur_submission == all_submissions.length && document.getElementsByTagName('button')[0].disabled) {
-        clearInterval(interval);
-        setTimeout(function() { updateStandingsTime(timeInStr(contest_duration).substr(1, 4) + ':00'); filter(true) }, 3000);
+    if (cur_time == contest_duration && document.getElementsByTagName('button')[0].disabled) {
+        setTimeout(function() { 
+            if (document.getElementById('standings_time').innerHTML == 'Standings [' + timeInStr(contest_duration).substr(1, 4) + ':00' + ']') {
+                clearInterval(interval);
+                filter(true); 
+            }
+        }, 3000);
     }
     statistic.prepare();
     updateStatistic(statistic_elem[0], statistic.all_submissions);
@@ -362,6 +366,9 @@ function getContestSpeed() {
 }
 
 function updateSubmissions() {
+    if (cur_time == contest_duration) {
+        return;
+    }
     var to_time = Math.min(contest_duration, cur_time + getContestSpeed());
     if (finish_contest) {
         to_time = contest_duration;
