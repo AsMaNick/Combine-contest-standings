@@ -142,7 +142,7 @@ function updateEnable(index, elem) {
 function disableRegions(disabled) {
     to_update = disabled;
     $(".row_region").each(updateEnable);
-    document.getElementsByTagName('button')[0].disabled = to_update;
+    updateButtonsAvailability(to_update);
 }
 
 function updateRegionstate(index, elem) {

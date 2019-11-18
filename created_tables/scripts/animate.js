@@ -127,6 +127,7 @@ function Statistic(problems) {
 var statistic;
 
 function loadResults() {
+    updateButtonsAvailability(false);
     all_teams_elem = document.getElementsByClassName('participant_result');
     all_place_elem = new Array(all_teams_elem.length);
     all_total_elem = new Array(all_teams_elem.length);
@@ -378,6 +379,8 @@ function updateSubmissions() {
 
 function finish() {
     if (is_animation) {
+        document.getElementsByTagName('button')[1].disabled = true;
+        document.getElementsByTagName('button')[2].disabled = true;
         if (document.getElementById('pause').innerHTML == "Continue") {
             pause();
         }
@@ -449,7 +452,7 @@ function go(only_init) {
     if (document.getElementsByClassName('row_region')[0].getElementsByTagName('input')[0].disabled) {
         need_update = false;
         if (!only_init) {
-            document.getElementsByTagName('button')[0].disabled = true;
+            updateButtonsAvailability(true);
         }
     }
     var time_start = Date.now();
@@ -458,7 +461,7 @@ function go(only_init) {
     if (need_update) {
         disableRegions(true);
         if (only_init) {
-            document.getElementsByTagName('button')[0].disabled = false;
+            updateButtonsAvailability(false);
         }
         fillY();
         all_submissions = [];
@@ -666,4 +669,10 @@ function sliderMouseUp() {
         document.getElementById('contest_start_time').value = timeInStr(start_time).substr(1, 4) + ':00';
         go(true);
     }
+}
+
+function updateButtonsAvailability(start_disabled) {
+    document.getElementsByTagName('button')[0].disabled = start_disabled;
+    document.getElementsByTagName('button')[1].disabled = !start_disabled;
+    document.getElementsByTagName('button')[2].disabled = !start_disabled;
 }
