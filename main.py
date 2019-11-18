@@ -318,8 +318,8 @@ class Standings:
         print('<td class="st_region" align="center"> <input type="range" id="contest_speed" min="1" max="60" value="10"> </input> </td>', file=f)
         print('<td class="st_region" align="center"> <input style="width: 50px" type="number" id="penalty_points" min="1" max="20" value="{}"> </input> </td>'.format(penalty_points), file=f)
         print('<td class="st_region" align="center"> <button onclick=go()> Start </button> </td>', file=f)
-        print('<td class="st_region" align="center"> <button onclick=finish()> Finish </button> </td>', file=f)
-        print('<td class="st_region" align="center"> <button id="pause" onclick=pause()>Pause</button> </td>', file=f)
+        print('<td class="st_region" align="center"> <button disabled="true" onclick=finish()> Finish </button> </td>', file=f)
+        print('<td class="st_region" align="center"> <button disabled="true" id="pause" onclick=pause()>Pause</button> </td>', file=f)
         print('</tr>', file=f)
         print('</table>', file=f)
 
