@@ -128,7 +128,6 @@ function filter(call_fill_places) {
     updateStatistic(statistic[2], percent_submissions);
     if (call_fill_places) {
         fillPlaces();
-        document.getElementById('contestStandings').style = 'border-collapse: collapse; border-spacing: 1px;';
     }
 }
 

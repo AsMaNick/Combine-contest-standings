@@ -382,7 +382,7 @@ function finish() {
         document.getElementsByTagName('button')[1].disabled = true;
         document.getElementsByTagName('button')[2].disabled = true;
         if (document.getElementById('pause').innerHTML == "Continue") {
-            pause();
+            document.getElementById('pause').innerHTML == "Pause"
         }
         clearInterval(interval);
         interval = setInterval(updateSubmissions, 500);
