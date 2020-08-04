@@ -2,7 +2,8 @@ var time_delay = 5000;
 var contest_penalty = 20;
 var contest_duration = 300;
 var num = 0;
-var all_teams_elem, all_place_elem, all_total_elem, all_penalty_elem, all_dirt_elem;
+var all_teams_elem, all_place_elem, all_total_elem, all_penalty_elem, all_dirt_elem, all_rating_elem;
+var has_rating_col = true;
 var mn_y, start_y, height, margin_y;
 var loaded = false;
 var interval;
@@ -132,7 +133,9 @@ function loadResults() {
     all_place_elem = new Array(all_teams_elem.length);
     all_total_elem = new Array(all_teams_elem.length);
     all_penalty_elem = new Array(all_teams_elem.length);
-    all_dirt_elem = new Array(all_teams_elem.length);;
+    all_dirt_elem = new Array(all_teams_elem.length);
+    all_rating_elem = new Array(all_teams_elem.length);
+    has_rating_col = true;
     height = new Array(all_teams_elem.length);
     start_y = new Array(all_teams_elem.length);
     margin_y = new Array(all_teams_elem.length);
@@ -140,8 +143,14 @@ function loadResults() {
     for (var i = 0; i < all_teams_elem.length; ++i) {
         all_place_elem[i] = all_teams_elem[i].getElementsByClassName('st_place')[0].getElementsByTagName('input')[0];
         all_total_elem[i] = all_teams_elem[i].getElementsByClassName('st_total')[0].getElementsByTagName('input')[0];
-        all_penalty_elem[i] = all_teams_elem[i].getElementsByClassName('st_pen')[0].getElementsByTagName('input')[0];
-        all_dirt_elem[i] = all_teams_elem[i].getElementsByClassName('st_pen')[1].getElementsByTagName('input')[0];
+        var st_pens = all_teams_elem[i].getElementsByClassName('st_pen');
+        all_penalty_elem[i] = st_pens[0].getElementsByTagName('input')[0];
+        all_dirt_elem[i] = st_pens[1].getElementsByTagName('input')[0];
+        if (st_pens.length > 2) {
+            all_rating_elem[i] = st_pens[2].getElementsByTagName('input')[0];
+        } else {
+            has_rating_col = false;
+        }
     }
     loaded = true;
 }
@@ -219,6 +228,12 @@ function updateDirt(id, val) {
     all_dirt_elem[id].value = val;
 }
 
+function updateRating(id, val) {
+    if (has_rating_col && all_rating_elem[id].value != '') {
+        all_rating_elem[id].value = val;
+    }
+}
+
 function getPlaces() {
     var time_start = Date.now();
     
@@ -250,6 +265,20 @@ function getPlaces() {
         i = next_place;
     }
     return places;
+}
+
+function calculate_itmo_rating(max_solved_problems, cnt_official_teams, place, total) {
+    var itmo_rating = 0;
+    if (max_solved_problems > 0) {
+        var min_place;
+        if (place.indexOf('-') == -1) {
+            min_place = parseInt(place);
+        } else {
+            min_place = parseInt(place.substr(0, place.indexOf('-')));
+        }
+        itmo_rating = 100 * total / max_solved_problems * (2 * cnt_official_teams - 2) / (cnt_official_teams + min_place - 2);
+    }
+    return itmo_rating;
 }
 
 function updateStandingsToTime(to_time) {
@@ -314,6 +343,14 @@ function updateStandingsToTime(to_time) {
     
     var places = getPlaces();
     var to_y = mn_y;
+    var max_solved_problems = 0, cnt_official_teams = 0;
+    for (var i = 0; i < all_results.length; ++i) {
+        var id = all_results[i].id;
+        if (all_place_elem[id].value != '-') {
+            ++cnt_official_teams;
+            max_solved_problems = Math.max(max_solved_problems, all_results[i].total);
+        }
+    }
     for (var i = 0; i < all_results.length; ++i) {
         var id = all_results[i].id;
         all_teams_elem[id].style.transform = 'translateY(' + (to_y - start_y[id]).toString() + 'px)';
@@ -322,6 +359,10 @@ function updateStandingsToTime(to_time) {
             updateTotal(id, all_results[i].total);
             updatePenalty(id, all_results[i].penalty);
             updateDirt(id, all_results[i].getDirt());
+        }
+        if (has_rating_col && all_place_elem[id].value != '-') {
+            var itmo_rating = calculate_itmo_rating(max_solved_problems, cnt_official_teams, places[i], all_results[i].total);
+            updateRating(id, itmo_rating.toFixed(2));
         }
         for (var j = 0; j < problems; ++j) {            
             if (was_wa_modified[i][j] == 1) {
@@ -348,6 +389,14 @@ function updateStandingsToTime(to_time) {
 
 function fillPlaces() {
     var places = getPlaces();
+    var max_solved_problems = 0, cnt_official_teams = 0;
+    for (var i = 0; i < all_results.length; ++i) {
+        var id = all_results[i].id;
+        if (all_place_elem[id].value != '-') {
+            ++cnt_official_teams;
+            max_solved_problems = Math.max(max_solved_problems, all_results[i].total);
+        }
+    }
     for (var i = 0; i < all_results.length; ++i) {
         var id = all_results[i].id;
         var elem = all_teams_elem[id];
@@ -355,6 +404,10 @@ function fillPlaces() {
         updateTotal(id, all_results[i].total);
         updatePenalty(id, all_results[i].penalty);
         updateDirt(id, all_results[i].getDirt());
+        if (has_rating_col && all_place_elem[id].value != '-') {
+            var itmo_rating = calculate_itmo_rating(max_solved_problems, cnt_official_teams, places[i], all_results[i].total);
+            updateRating(id, itmo_rating.toFixed(2));
+        }
     }
     is_animation = false;
     disableRegions(false);

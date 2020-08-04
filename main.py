@@ -23,6 +23,10 @@ team_regions = dict()
 problem_openers = ['' for i in range(problems)]
 time_openers = [1e9 for i in range(problems)]
 
+team_members = {}
+if path_to_team_members != '':
+    team_members = json.load(open(path_to_team_members, 'r'))
+    
 print('<div id="standingsSettings"><!--', file=f)
 print('contestDuration {}'.format(contest_duration), file=f)
 print('--></div>', file=f)
@@ -38,6 +42,9 @@ if len(csv_files) > 0:
                 print('Ignoring', it, row['Run_Id'], row['Prob'], user_name)
                 continue
             user_name = user_name.replace('[Bucharest_site]&sp&', '')
+            if user_name in team_members:
+                user_name = team_members[user_name]
+            user_name = user_name.replace(' ', '&sp&')
             prob_id = problem_ids.index(row['Prob'])
             hour = int(row['Dur_Hour'])
             minute = int(row['Dur_Min'])
@@ -136,13 +143,20 @@ class Result:
                 res += 1
         return res
         
-    def write(self, place, open_times, problem_openers, f):
+    def solved_problems(self):
+        res = 0
+        for prob_res in self.problem_results:
+            if len(prob_res) > 0 and prob_res[0] == '+':
+                res += 1
+        return res
+        
+    def write(self, place, open_times, problem_openers, max_solved_problems, cnt_official_teams, f):
         print('<tr class="participant_result">', file=f)
         print('<td class="st_place"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(place), file=f)
         team_title = self.name
         if self.name in team_members:
             team_title = team_members[self.name]
-        print('<td class="st_team" title="{}">{}</td>'.format(team_title, self.name), file=f)
+        print('<td class="st_team" title="{}">{}</td>'.format('', self.name), file=f)
         print('<td class="st_extra">{}</td>'.format(self.region), file=f)
         for prob_res, prob_time, open_time, problem_opener in zip(self.problem_results, self.problem_times, open_times, problem_openers):
             background = ''
@@ -162,6 +176,13 @@ class Result:
         print('<td class="st_total"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.total), file=f)
         print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.penalty), file=f)
         print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text" value={:.2f}></input></td>'.format(self.get_dirt()), file=f)
+        if show_itmo_rating:
+            if place.find('-') == -1:
+                min_place = int(place)
+            else:
+                min_place = int(place[:place.find('-')])
+            itmo_rating = 100 * self.solved_problems() / max_solved_problems * (2 * cnt_official_teams - 2) / (cnt_official_teams + min_place - 2)
+            print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text" value={:.2f}></input></td>'.format(itmo_rating), file=f)
         #print('<td  class="st_total">{}</td>'.format(self.total), file=f)
         #print('<td  class="st_pen">{}</td>'.format(self.penalty), file=f)
         #print('<td  class="st_pen">{:.2f}</td>'.format(self.get_dirt()), file=f)
@@ -220,6 +241,8 @@ class Standings:
             print('<td title="{}" class="st_prob">{}</td>'.format(get_problem_title(problem_id), x), file=f)
         print('<td class="st_pen"><output style="color: transparent">9999</output></td>', file=f)
         print('<td class="st_pen"><output style="color: transparent">0.99</output></td>', file=f)
+        if show_itmo_rating:
+            print('<td class="st_pen"><output style="color: transparent">200.00</output></td>', file=f)
         print('</tr>', file=f)
         
         print('<tr class="submissions_statistic">', file=f)
@@ -230,6 +253,8 @@ class Standings:
             print('<td title="{}" class="st_prob">{}</td>'.format(get_problem_title(problem_id), x), file=f)
         print('<td class="st_team">&nbsp;</td>', file=f)
         print('<td class="st_team">&nbsp;</td>', file=f)
+        if show_itmo_rating:
+            print('<td class="st_team">&nbsp;</td>', file=f)
         print('</tr>', file=f)
         
         print('<tr class="submissions_statistic">', file=f)
@@ -243,6 +268,8 @@ class Standings:
             print('<td title="{}" class="st_prob">{:.0f}%</td>'.format(get_problem_title(problem_id), perc), file=f)
         print('<td class="st_team">&nbsp;</td>', file=f)
         print('<td class="st_team">&nbsp;</td>', file=f)
+        if show_itmo_rating:
+            print('<td class="st_team">&nbsp;</td>', file=f)
         print('</tr>', file=f)
         
     def get_region_statistic(self, region):
@@ -294,6 +321,7 @@ class Standings:
             print('<link rel="stylesheet" href="{}styles/unpriv3.css" type="text/css" />'.format(path_to_scripts), file=f)
             print('<link rel="stylesheet" href="{}styles/animate.css" type="text/css" />'.format(path_to_scripts), file=f)
             print('<link rel="stylesheet" href="{}styles/styles.css" type="text/css" />'.format(path_to_scripts), file=f)
+            print('<link rel="stylesheet" href="{}styles/cf_styles.css" type="text/css" />'.format(path_to_scripts), file=f)
             print('<style id="styles"> table.standings td { height: 40px; } </style>', file=f)
         else:
             print('<link rel="stylesheet" href="http://ejudge.khai.edu/ejudge/unpriv.css" type="text/css" />', file=f)
@@ -337,6 +365,8 @@ class Standings:
         print('<th  class="st_total">{}</th>'.format('Total'), file=f)
         print('<th  class="st_pen">{}</th>'.format('Penalty'), file=f)
         print('<th  class="st_pen">{}</th>'.format('Dirt'), file=f)
+        if show_itmo_rating:
+            print('<th  class="st_pen">{}</th>'.format('Rating'), file=f)
         print('</tr>', file=f)
         open_times = ['(9:99)' for i in range(problems)]
         for place, result in enumerate(self.all_results):
@@ -363,11 +393,13 @@ class Standings:
             cur_res = cur
             
         place = 0
+        max_solved_problems = self.all_results[0].solved_problems()
+        cnt_official_teams = real_place
         for place, result in zip(places, self.all_results):
             if result.region in self.ignore_regions:            
-                result.write('-', open_times, self.problem_openers, f)
+                result.write('-', open_times, self.problem_openers, max_solved_problems, cnt_official_teams, f)
             else:
-                result.write(place, open_times, self.problem_openers, f)
+                result.write(place, open_times, self.problem_openers, max_solved_problems, cnt_official_teams, f)
             if True:
                 num = 0
                 for prob_res, prob_time in zip(result.problem_results, result.problem_times):
@@ -453,9 +485,6 @@ def get_unofficial_teams(path):
     
     
 unofficial_teams = []
-team_members = {}
-if path_to_team_members != '':
-    team_members = json.load(open(path_to_team_members, 'r'))
 if path_to_unofficial_teams != '':
     unofficial_teams = get_unofficial_teams(path_to_unofficial_teams)
 if path_to_team_regions != '':
@@ -501,10 +530,13 @@ else:
                 results.append('')
                 times.append('')
         region = 'Ukraine'
+        print(team[:team.find('&sp&(')], team[:team.find('&sp&(')] in team_regions)
         if team in team_regions:
             region = team_regions[team]
         elif team.replace('&sp&', ' ') in team_regions:
             region = team_regions[team.replace('&sp&', ' ')]
+        elif team[:team.find('&sp&(')] in team_regions:
+            region = team_regions[team[:team.find('&sp&(')]]
         for word in []:
             if team.find(word) != -1:
                 region = 'Other'

@@ -1,0 +1,40 @@
+.user-black {
+	color: black !important;
+	font-weight: normal !important;
+}
+
+.user-gray {
+	color: gray !important;
+}
+
+.user-red {
+	color: red !important;
+}
+
+.user-orange {
+	color: #FF8C00 !important;
+}
+
+.user-violet {
+	color: #a0a !important;
+}
+
+.user-blue {
+	color: blue !important;
+}
+
+.user-cyan {
+	color: #03A89E !important;
+}
+
+.user-green {
+	color: green !important;
+}
+
+.legendary-user-first-letter {
+	color: black !important;
+}
+
+.user-legendary {
+	color: red !important;
+}
