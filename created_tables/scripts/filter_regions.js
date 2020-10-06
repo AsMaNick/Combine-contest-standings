@@ -90,6 +90,9 @@ function updateStatistic(elem, arr) {
 }
 
 function filter(call_fill_places) {
+    if (!loaded) {
+        return;
+    }
     best_time = undefined;
     all_submissions = undefined;
     ok_submissions = undefined;
