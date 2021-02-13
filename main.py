@@ -511,6 +511,7 @@ if len(csv_files) == 0:
         process(r.content, region)
 else:
     team_regions['GeorgianSU'] = 'Georgia'
+    res_team_regions = dict()
     all_teams = {x[0] for x in all_status}
     for x in all_successful_submits:
         all_teams.add(x[0])
@@ -563,7 +564,9 @@ else:
             region = 'Default'
         team_res = Result(team_name, region, results, times, solved, penalty)
         print(team_name, region)
+        res_team_regions[team_name] = region
         standings.add(team_res)
+    json.dump(res_team_regions, open('team_regions.json', 'w'))
 standings.set_problem_openers(problem_openers)
 standings.sort()
 standings.write(f)
