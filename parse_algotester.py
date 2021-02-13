@@ -53,8 +53,16 @@ def update(user_name):
 team_members = {} # json.load(open('data/uzhgorod/team_members1.txt', 'r'))
 
 
+def parse_time_hms(t):
+    h = int(t[:2])
+    m = int(t[3:5])
+    s = int(t[6:8])
+    return h * 3600 + m * 60 + s
+    
+
 def process(input_file):
-    time_start = datetime(2019, 8, 9, 10, 45, 0)
+    time_start = datetime(2019, 8, 1, 11, 00, 0)
+    time_start_hms = parse_time_hms('07:30:00Z')
     ouf = open(input_file[:input_file.rfind('.')] + '.csv', 'w', encoding='utf8')
     print('Run_Id;User_Name;Prob;Dur_Hour;Dur_Min;Dur_Sec;Stat_Short;', file=ouf)
     data = json.load(open(input_file, 'r'))['rows']
@@ -65,9 +73,13 @@ def process(input_file):
         user_name = user_name[:user_name.find(' (')] # ignore team members
         user_name = update(user_name)
         problem_id = submission['Problem']['Text'][:1] # only letter
-        timestamp = int(submission['TimeCreated'][6:-2])
-        timestamp = datetime.fromtimestamp(timestamp / 1e3) - time_start
-        t = timestamp.seconds
+        if True:
+            timestamp = parse_time_hms(submission['TimeCreated'][-9:])
+            t = timestamp - time_start_hms
+        else:
+            timestamp = int(submission['TimeCreated'][6:-2])
+            timestamp = datetime.fromtimestamp(timestamp / 1e3) - time_start
+            t = timestamp.seconds
         hour = t // 3600
         minute = (t % 3600) // 60
         second = (t % 3600) % 60
@@ -79,4 +91,4 @@ def process(input_file):
     ouf.close()
     
 
-process('data/uzhgorod/day1_1liga.json')
+process('data/uzhgorod_2020/day5_liga1.json')
