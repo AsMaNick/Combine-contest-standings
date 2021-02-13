@@ -177,12 +177,18 @@ class Result:
         print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.penalty), file=f)
         print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text" value={:.2f}></input></td>'.format(self.get_dirt()), file=f)
         if show_itmo_rating:
-            if place.find('-') == -1:
-                min_place = int(place)
+            if place != '-':
+                if place.find('-') != -1:
+                    min_place = int(place[:place.find('-')])
+                else:
+                    min_place = int(place)
+                itmo_rating = 100 * self.solved_problems() / max_solved_problems * (2 * cnt_official_teams - 2) / (cnt_official_teams + min_place - 2)
             else:
-                min_place = int(place[:place.find('-')])
-            itmo_rating = 100 * self.solved_problems() / max_solved_problems * (2 * cnt_official_teams - 2) / (cnt_official_teams + min_place - 2)
-            print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text" value={:.2f}></input></td>'.format(itmo_rating), file=f)
+                itmo_rating = ''
+            if itmo_rating =='':
+                print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text"></input></td>', file=f)
+            else:
+                print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text" value={:.2f}></input></td>'.format(itmo_rating), file=f)
         #print('<td  class="st_total">{}</td>'.format(self.total), file=f)
         #print('<td  class="st_pen">{}</td>'.format(self.penalty), file=f)
         #print('<td  class="st_pen">{:.2f}</td>'.format(self.get_dirt()), file=f)
@@ -393,7 +399,11 @@ class Standings:
             cur_res = cur
             
         place = 0
-        max_solved_problems = self.all_results[0].solved_problems()
+        max_solved_problems = 0
+        for place, result in zip(places, self.all_results):
+            if result.region not in self.ignore_regions:       
+                max_solved_problems = result.solved_problems()
+                break
         cnt_official_teams = real_place
         for place, result in zip(places, self.all_results):
             if result.region in self.ignore_regions:            
@@ -530,7 +540,7 @@ else:
                 results.append('')
                 times.append('')
         region = 'Ukraine'
-        print(team[:team.find('&sp&(')], team[:team.find('&sp&(')] in team_regions)
+        #print(team[:team.find('&sp&(')], team[:team.find('&sp&(')] in team_regions)
         if team in team_regions:
             region = team_regions[team]
         elif team.replace('&sp&', ' ') in team_regions:
@@ -541,15 +551,18 @@ else:
             if team.find(word) != -1:
                 region = 'Other'
                 break
-        if team[:2] == 's_' or team[:1] == 's':
-            #region = 'School'
+        if team[:2] == 's_' or team[:1] == 's' or team.lower().find('polit') != -1:
+            region = 'School'
             pass
         team_name = team.replace('&sp&', ' ')
         if team_name[:11] == '_____*Polit':
             continue
         if team_name in unofficial_teams:
             region = 'Unofficial'
+        if team_name in ['EUNU_Thrasher', 'DSEA:BooleanTrue', 'UzhNU_KSUV', 'KNU_0_GB_RAM', 'KhNURE_hesoyam', 'cKhmPC_fsociety00.dat', 'Code_Math_And_Rock&Roll', 'KhNTU_SpaceCats', 'VNTU_Cheezzas']:
+            region = 'Default'
         team_res = Result(team_name, region, results, times, solved, penalty)
+        print(team_name, region)
         standings.add(team_res)
 standings.set_problem_openers(problem_openers)
 standings.sort()
