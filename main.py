@@ -25,10 +25,11 @@ time_openers = [1e9 for i in range(problems)]
 
 team_members = {}
 if path_to_team_members != '':
-    team_members = json.load(open(path_to_team_members, 'r'))
+    team_members = {key.replace(' ', '&sp&') : value for key, value in json.load(open(path_to_team_members, 'r')).items()}
     
 print('<div id="standingsSettings"><!--', file=f)
 print('contestDuration {}'.format(contest_duration), file=f)
+print('maxItmoRating {}'.format(max_itmo_rating), file=f)
 print('--></div>', file=f)
 if len(csv_files) > 0:
     import pandas as pd
@@ -176,13 +177,13 @@ class Result:
         print('<td class="st_total"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.total), file=f)
         print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.penalty), file=f)
         print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text" value={:.2f}></input></td>'.format(self.get_dirt()), file=f)
-        if show_itmo_rating:
+        if max_itmo_rating:
             if place != '-':
                 if place.find('-') != -1:
                     min_place = int(place[:place.find('-')])
                 else:
                     min_place = int(place)
-                itmo_rating = 100 * self.solved_problems() / max_solved_problems * (2 * cnt_official_teams - 2) / (cnt_official_teams + min_place - 2)
+                itmo_rating = 0.5 * max_itmo_rating * self.solved_problems() / max_solved_problems * (2 * cnt_official_teams - 2) / (cnt_official_teams + min_place - 2)
             else:
                 itmo_rating = ''
             if itmo_rating =='':
@@ -247,7 +248,7 @@ class Standings:
             print('<td title="{}" class="st_prob">{}</td>'.format(get_problem_title(problem_id), x), file=f)
         print('<td class="st_pen"><output style="color: transparent">9999</output></td>', file=f)
         print('<td class="st_pen"><output style="color: transparent">0.99</output></td>', file=f)
-        if show_itmo_rating:
+        if max_itmo_rating:
             print('<td class="st_pen"><output style="color: transparent">200.00</output></td>', file=f)
         print('</tr>', file=f)
         
@@ -259,7 +260,7 @@ class Standings:
             print('<td title="{}" class="st_prob">{}</td>'.format(get_problem_title(problem_id), x), file=f)
         print('<td class="st_team">&nbsp;</td>', file=f)
         print('<td class="st_team">&nbsp;</td>', file=f)
-        if show_itmo_rating:
+        if max_itmo_rating:
             print('<td class="st_team">&nbsp;</td>', file=f)
         print('</tr>', file=f)
         
@@ -274,7 +275,7 @@ class Standings:
             print('<td title="{}" class="st_prob">{:.0f}%</td>'.format(get_problem_title(problem_id), perc), file=f)
         print('<td class="st_team">&nbsp;</td>', file=f)
         print('<td class="st_team">&nbsp;</td>', file=f)
-        if show_itmo_rating:
+        if max_itmo_rating:
             print('<td class="st_team">&nbsp;</td>', file=f)
         print('</tr>', file=f)
         
@@ -371,7 +372,7 @@ class Standings:
         print('<th  class="st_total">{}</th>'.format('Total'), file=f)
         print('<th  class="st_pen">{}</th>'.format('Penalty'), file=f)
         print('<th  class="st_pen">{}</th>'.format('Dirt'), file=f)
-        if show_itmo_rating:
+        if max_itmo_rating:
             print('<th  class="st_pen">{}</th>'.format('Rating'), file=f)
         print('</tr>', file=f)
         open_times = ['(9:99)' for i in range(problems)]
@@ -499,7 +500,11 @@ if path_to_unofficial_teams != '':
     unofficial_teams = get_unofficial_teams(path_to_unofficial_teams)
 if path_to_team_regions != '':
     team_regions = json.load(open(path_to_team_regions, 'r'))
-
+    for team, update_team in team_members.items():
+        if team.replace('&sp&', ' ') in team_regions:
+            team = team.replace('&sp&', ' ')
+        if team in team_regions:
+            team_regions[update_team] = team_regions[team]
 standings_title = '<p align="center" style="font-family: times-new-roman"> \
     <a style="float: left; margin: 13px; padding-left: 7px" href="../../"> <img width="30px" src="{}images/back_arrow.png"></a> \
     <font size="7"> {} </font> </p> <p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p>'.format(path_to_scripts, olympiad_title, olympiad_date)
