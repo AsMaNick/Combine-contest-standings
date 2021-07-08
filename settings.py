@@ -35,4 +35,4 @@ path_to_team_members = '' # empty string for ignore
 path_to_unofficial_teams = '' # empty string for ignore
 standings_file_name = 'standings'
 write_team_members = True
-show_itmo_rating = False
+max_itmo_rating = 200 # 0 for no rating

@@ -1,6 +1,6 @@
 var time_delay = 5000;
 var contest_penalty = 20;
-var contest_duration = 300;
+var contest_duration = 300, max_itmo_rating = 200;
 var num = 0;
 var all_teams_elem, all_place_elem, all_total_elem, all_penalty_elem, all_dirt_elem, all_rating_elem;
 var has_rating_col = true;
@@ -276,7 +276,7 @@ function calculate_itmo_rating(max_solved_problems, cnt_official_teams, place, t
         } else {
             min_place = parseInt(place.substr(0, place.indexOf('-')));
         }
-        itmo_rating = 100 * total / max_solved_problems * (2 * cnt_official_teams - 2) / (cnt_official_teams + min_place - 2);
+        itmo_rating = 0.5 * max_itmo_rating * total / max_solved_problems * (2 * cnt_official_teams - 2) / (cnt_official_teams + min_place - 2);
     }
     return itmo_rating;
 }
@@ -521,6 +521,7 @@ function go(only_init) {
         var id = -1;
         if (document.getElementById('standingsSettings') === null) {
             contest_duration = 300;
+            max_itmo_rating = 200;
         } else {
             var settings = document.getElementById('standingsSettings').innerHTML;
             settings = settings.substr(5, settings.length - 8);
@@ -529,6 +530,9 @@ function go(only_init) {
                 var data = params[i].split(' ');
                 if (data[0] == 'contestDuration') {
                     contest_duration = parseInt(data[1]);
+                }
+                if (data[0] == 'maxItmoRating') {
+                    max_itmo_rating = parseInt(data[1]);
                 }
             }
         }
