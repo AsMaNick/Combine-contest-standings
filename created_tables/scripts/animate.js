@@ -234,7 +234,7 @@ function updateRating(id, val) {
     }
 }
 
-function getPlaces() {
+function getPlaces(all_results) {
     var time_start = Date.now();
     
     var next_place = 0;
@@ -341,7 +341,7 @@ function updateStandingsToTime(to_time) {
     use_id = 1;
     all_results.sort(compareResultByTotal);
     
-    var places = getPlaces();
+    var places = getPlaces(all_results);
     var to_y = mn_y;
     var max_solved_problems = 0, cnt_official_teams = 0;
     for (var i = 0; i < all_results.length; ++i) {
@@ -388,7 +388,7 @@ function updateStandingsToTime(to_time) {
 }
 
 function fillPlaces() {
-    var places = getPlaces();
+    var places = getPlaces(all_results);
     var max_solved_problems = 0, cnt_official_teams = 0;
     for (var i = 0; i < all_results.length; ++i) {
         var id = all_results[i].id;

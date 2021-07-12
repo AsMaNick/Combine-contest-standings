@@ -101,6 +101,20 @@ function filter(call_fill_places) {
     $(".row_region").each(updateRegions);
     place = 0;
     $(".participant_result").each(myModify);
+    var all_results = new Array();
+    for (var i = 0; i < all_teams_elem.length; ++i) {
+        if (all_teams_elem[i].hidden) {
+            continue;
+        }
+        var cur_result = new Result(i);
+        cur_result.total = parseInt(all_total_elem[i].value);
+        cur_result.penalty = parseInt(all_penalty_elem[i].value);
+        all_results.push(cur_result);
+    }
+    var places = getPlaces(all_results);
+    for (var i = 0; i < all_results.length; ++i) {
+        updatePlace(all_results[i].id, places[i]);
+    }
     if (all_submissions == undefined) {
         all_submissions = new Array(problems + 1);
         ok_submissions = new Array(problems + 1);
