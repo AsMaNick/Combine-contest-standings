@@ -1,40 +1,45 @@
+.user-cf {
+    text-decoration: none !important;
+    font-weight: bold !important;
+}
+
 .user-black {
-	color: black !important;
-	font-weight: normal !important;
+    color: black !important;
+    font-weight: normal !important;
 }
 
 .user-gray {
-	color: gray !important;
+    color: gray !important;
 }
 
 .user-red {
-	color: red !important;
+    color: red !important;
 }
 
 .user-orange {
-	color: #FF8C00 !important;
+    color: #FF8C00 !important;
 }
 
 .user-violet {
-	color: #a0a !important;
+    color: #a0a !important;
 }
 
 .user-blue {
-	color: blue !important;
+    color: blue !important;
 }
 
 .user-cyan {
-	color: #03A89E !important;
+    color: #03A89E !important;
 }
 
 .user-green {
-	color: green !important;
+    color: green !important;
 }
 
 .legendary-user-first-letter {
-	color: black !important;
+    color: black !important;
 }
 
 .user-legendary {
-	color: red !important;
+    color: red !important;
 }

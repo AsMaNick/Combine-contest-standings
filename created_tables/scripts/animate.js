@@ -614,6 +614,10 @@ function go(only_init) {
                 updatePenalty(i, 0);
             }
         } else {
+            var submissionsData = parseSubmisions();
+            if (submissionsData.length <= 1) {
+                submissionsData = [];
+            }
             var team_ids = {};
             var probs = new Array(all_teams_elem.length);
             var is_opener = new Array(all_teams_elem.length);
@@ -636,8 +640,22 @@ function go(only_init) {
                     probs[id][j].innerHTML = '&nbsp';
                     probs[id][j].style = '';
                 }
+                if (!submissionsData.length) {
+                    var log = all_teams_elem[i].getElementsByClassName('teamSubmissionsLog')[0].innerHTML;
+                    log = log.replace('<!--', '').replace('-->', '');
+                    var submissions = log.split('\n');
+                    for (var submission of submissions) {
+                        var data = submission.split(' ');
+                        var problem_id = parseInt(data[0]);
+                        all_submissions.push(new Submission(id,
+                                                            problem_id,
+                                                            data[1], // timeInStr
+                                                            data[2], // result
+                                                            is_opener[id][problem_id],
+                                                            probs[id][problem_id]));
+                    }
+                }
             }
-            var submissionsData = parseSubmisions();
             for (var submission of submissionsData) {
                 if (submission[0] in team_ids) {
                     var id = team_ids[submission[0]];
@@ -732,4 +750,99 @@ function updateButtonsAvailability(start_disabled) {
     document.getElementsByTagName('button')[0].disabled = start_disabled;
     document.getElementsByTagName('button')[1].disabled = !start_disabled;
     document.getElementsByTagName('button')[2].disabled = !start_disabled;
+}
+
+function getColoredClass(oj, rating) {
+    if (oj == 'AtCoder') {
+        if (rating >= 2800) {
+            return 'user-red-atcoder';
+        } else if (rating >= 2400) {
+            return 'user-orange-atcoder';
+        } else if (rating >= 2000) {
+            return 'user-yellow-atcoder';
+        } else if (rating >= 1600) {
+            return 'user-blue-atcoder';
+        } else if (rating >= 1200) {
+            return 'user-cyan-atcoder';
+        } else if (rating >= 800) {
+            return 'user-green-atcoder';
+        } else if (rating >= 400) {
+            return 'user-brown-atcoder';
+        } else if (rating > 0) {
+            return 'user-gray-atcoder';
+        }
+        return 'user-unrated-atcoder';
+    } else if (oj == 'CF') {
+        if (rating >= 2400) {
+            return 'user-red';
+        } else if (rating >= 2100) {
+            return 'user-orange';
+        } else if (rating >= 1900) {
+            return 'user-violet';
+        } else if (rating >= 1600) {
+            return 'user-blue';
+        } else if (rating >= 1400) {
+            return 'user-cyan';
+        } else if (rating >= 1200) {
+            return 'user-green';
+        } else if (rating > 0) {
+            return 'user-gray';
+        }
+        return 'user-black';
+    }
+}
+
+function getNutellaName(name, rating) {
+    if (rating >= 3000) {
+        return `<span class="legendary-user-first-letter">${name[0]}</span>${name.substring(1)}`;
+    }
+    return name;
+}
+
+function getColoredName(info, oj) {
+    if (!(oj in info.info)) {
+        return info.name;
+    }
+    var handle = info.info[oj].handle;
+    var rating = info.info[oj].rating;
+    if (oj == 'AtCoder') {
+        return `<a href="https://atcoder.jp/users/${handle}" title="${handle}, ${rating}" class="user-atcoder ${getColoredClass(oj, rating)}">${info.name}</a>`;
+    } else if (oj == 'CF') {
+        return `<a href="https://codeforces.com/profile/${handle}" title="${handle}, ${rating}" class="user-cf ${getColoredClass(oj, rating)}">${getNutellaName(info.name, rating)}</a>`;
+    }
+}
+
+function getColoredRating(rating, oj) {
+    console.log(rating, oj);
+    if (oj == 'AtCoder') {
+        return `<a class="user-atcoder ${getColoredClass(oj, rating)}">${rating}</a>`;
+    } else if (oj == 'CF') {
+        return `<a class="user-cf ${getColoredClass(oj, rating)}">${getNutellaName(rating.toString(), rating)}</a>`;
+    }
+}
+
+function updateTeamRating() {
+    var oj = document.getElementById('show_ranking_select').value;
+    for (var i = 0; i < all_teams_elem.length; ++i) {
+        var info = all_teams_elem[i].getElementsByClassName('teamInfoJson')[0].innerHTML;
+        info = info.substring(4, info.length - 3);
+        if (info == '') {
+            continue;
+        }
+        info = JSON.parse(info);
+        var team_members = [], team_ratings = [];
+        for (var team_member of info.members) {
+            if (oj in team_member.info) {
+                team_members.push(getColoredName(team_member, oj));
+                team_ratings.push(team_member.info[oj].rating);
+            } else {
+                team_members.push(team_member.name);
+            }
+        }
+        var team_name = info.team + ' (' + team_members.join(', ') + ')';
+        if (oj in info.rating && info.rating[oj] > 0) {
+            team_name += ', total = ' + getColoredRating(info.rating[oj], oj);
+        }
+        all_teams_elem[i].getElementsByClassName('displayedTeamName')[0].innerHTML = team_name;
+    }
 }

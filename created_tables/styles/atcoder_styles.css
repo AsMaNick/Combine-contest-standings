@@ -1,0 +1,49 @@
+.user-atcoder {
+    text-decoration: none !important;
+    font-weight: bold !important;
+}
+
+.user-red-atcoder {
+    color: #FF0000 !important;
+    fill: #FF0000!important;
+}
+
+.user-orange-atcoder {
+    color: #FF8000 !important;
+    fill: #FF8000 !important;
+}
+
+.user-yellow-atcoder {
+    color: #C0C000 !important;
+    fill: #C0C000 !important;
+}
+
+.user-blue-atcoder {
+    color: #0000FF !important;
+    fill: #0000FF !important;
+}
+
+.user-cyan-atcoder {
+    color: #00C0C0 !important;
+    fill: #00C0C0 !important;
+}
+
+.user-green-atcoder {
+    color: #008000 !important;
+    fill: #008000 !important;
+}
+
+.user-brown-atcoder {
+    color: #804000 !important;
+    fill: #804000 !important;
+}
+
+.user-gray-atcoder {
+    color: #808080 !important;
+    fill: #808080 !important;
+}
+
+.user-unrated-atcoder {
+    color: #000000 !important;
+    font-weight: normal !important;
+}

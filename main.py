@@ -4,6 +4,7 @@ import dis
 import codecs
 import sys
 import os
+import math
 from tqdm import tqdm
 
 
@@ -14,10 +15,13 @@ def bad_user(user_name):
 from settings import *
 
 assert problems == len(problem_names)
+assert((show_oj_rating != []) == (path_to_oj_info != ''))
+
 max_length_place = '7771777'
 
 f = open('created_tables/{}.html'.format(standings_file_name), 'w', encoding='utf8')
 all_successful_submits = {}
+all_submissions = {}
 
 team_regions = dict()
 problem_openers = ['' for i in range(problems)]
@@ -26,7 +30,11 @@ time_openers = [1e9 for i in range(problems)]
 team_members = {}
 if path_to_team_members != '':
     team_members = {key.replace(' ', '&sp&') : value for key, value in json.load(open(path_to_team_members, 'r')).items()}
-    
+
+team_members_with_oj_info = {}
+if path_to_oj_info != '':
+    team_members_with_oj_info = json.load(open(path_to_oj_info, 'r'))
+
 print('<div id="standingsSettings"><!--', file=f)
 print('contestDuration {}'.format(contest_duration), file=f)
 print('maxItmoRating {}'.format(max_itmo_rating), file=f)
@@ -38,7 +46,7 @@ if len(csv_files) > 0:
     for csv_file, region in zip(csv_files, regions):
         data = pd.read_csv(path_to_data + csv_file, ';')
         for it, row in tqdm(data.iterrows()):
-            user_name = str(row['User_Name']).replace(' ', '&sp&', 1000000000)
+            user_name = str(row['User_Name']).replace(' ', '&sp&')
             if row['Prob'][0] == '!' or bad_user(user_name):
                 print('Ignoring', it, row['Run_Id'], row['Prob'], user_name)
                 continue
@@ -50,10 +58,13 @@ if len(csv_files) > 0:
             hour = int(row['Dur_Hour'])
             minute = int(row['Dur_Min'])
             second = int(row['Dur_Sec'])
-            time_in_seconds = hour * 3600 + minute * 60 + second
+            dur_day = int(row['Dur_Day']) if 'Dur_Day' in row else 0
+            time_in_seconds = dur_day * 3600 * 24 + hour * 3600 + minute * 60 + second
             if time_in_seconds > contest_duration * 60:
+                print(user_name, prob_id, hour, minute, row['Stat_Short'])
+                exit()
                 continue
-            if second != 0 and round_time == 'UP':
+            if (second != 0 and round_time == 'UP') or (second > 30 and round_time == 'CLOSEST'):
                 minute += 1
                 if minute == 60:
                     hour += 1
@@ -82,7 +93,9 @@ if len(csv_files) > 0:
                 wrong_attempts += 1
                 result = '-' + str(wrong_attempts)
                 all_status[p] = wrong_attempts
-            print(user_name, prob_id, time, result, file=f)
+            if user_name not in all_submissions:
+                all_submissions[user_name] = []
+            all_submissions[user_name].append((prob_id, time, result))
     print('--></div>', file=f)
     
 def get_value(text, pattern, pos):
@@ -98,32 +111,118 @@ def get_value(text, pattern, pos):
         pos += 1
     res = res.replace('&#36;', '$', 1000)
     return res, pos
-    
+
 
 def is_digit(x):
     return '0' <= x <= '9'
-    
+
 
 def get_problem_title(problem_id):
     if problem_id < len(problem_names):
         return problem_ids[problem_id] + ' - ' + problem_names[problem_id]
     return ''
-    
-    
+
+
 def get_time_str(time):
     h = time // 60
     m = time % 60
     return '{:1d}:{:02d}:00'.format(h, m)
-    
-    
+
+
+def get_colored_class(oj, rating):
+    if oj == 'AtCoder':
+        if rating >= 2800:
+            return 'user-red-atcoder'
+        elif rating >= 2400:
+            return 'user-orange-atcoder'
+        elif rating >= 2000:
+            return 'user-yellow-atcoder'
+        elif rating >= 1600:
+            return 'user-blue-atcoder'
+        elif rating >= 1200:
+            return 'user-cyan-atcoder'
+        elif rating >= 800:
+            return 'user-green-atcoder'
+        elif rating >= 400:
+            return 'user-brown-atcoder'
+        elif rating > 0:
+            return 'user-gray-atcoder'
+        return 'user-unrated-atcoder'
+    elif oj == 'CF':
+        if rating >= 2400:
+            return 'user-red'
+        elif rating >= 2100:
+            return 'user-orange'
+        elif rating >= 1900:
+            return 'user-violet'
+        elif rating >= 1600:
+            return 'user-blue'
+        elif rating >= 1400:
+            return 'user-cyan'
+        elif rating >= 1200:
+            return 'user-green'
+        elif rating > 0:
+            return 'user-gray'
+        return 'user-black'
+
+
+def get_nutella_name(name, rating):
+    if rating >= 3000:
+        return f'<span class="legendary-user-first-letter">{name[0]}</span>{name[1:]}'
+    return name
+
+
+def get_colored_name(info, oj):
+    if oj not in info['info']:
+        return info['name']
+    handle = info['info'][oj]['handle']
+    rating = info['info'][oj]['rating']
+    if oj == 'AtCoder':
+        return f'<a href="https://atcoder.jp/users/{handle}"  title="{handle}, {rating}" class="user-atcoder {get_colored_class(oj, rating)}">{info["name"]}</a>'
+    elif oj == 'CF':
+        return f'<a href="https://codeforces.com/profile/{handle}" title="{handle}, {rating}" class="user-cf {get_colored_class(oj, rating)}">{get_nutella_name(info["name"], rating)}</a>'
+    else:
+        raise NotImplementedError
+
+
+def get_colored_rating(rating, oj):
+    if oj == 'AtCoder':
+        return f'<a class="user-atcoder {get_colored_class(oj, rating)}">{rating}</a>'
+    elif oj == 'CF':
+        return f'<a class="user-cf {get_colored_class(oj, rating)}">{get_nutella_name(str(rating), rating)}</a>'
+    else:
+        raise NotImplementedError
+
+
+def get_team_rating(team_ratings):
+    if len(team_ratings) == 0:
+        return 0
+    def get_win_probability(ra, rb):
+        return 1 / (1 + 10 ** ((rb - ra) / 400.0))
+    left = 0
+    right = 1e4
+    for it in range(100):
+        r = (left + right) / 2
+        r_wins_probability = 1
+        for team_member_rating in team_ratings:
+            r_wins_probability *= get_win_probability(r, team_member_rating)
+        rating = math.log10(1 / (r_wins_probability) - 1) * 400 + r
+        if rating > r:
+            left = r
+        else:
+            right = r
+    return int((left + right) / 2)
+
+
 class Result:
-    def __init__(self, name, region, problem_results, problem_times, total, penalty):
+    def __init__(self, name, region, problem_results, problem_times, total, penalty, all_submissions):
         self.name = name
         self.problem_results = problem_results
         self.problem_times = problem_times
         self.total = int(total)
         self.penalty = int(penalty)
         self.region = region
+        self.all_submissions = all_submissions
         
     def __lt__(self, other):
         return self.total > other.total or (self.total == other.total and self.penalty < other.penalty)
@@ -150,14 +249,62 @@ class Result:
             if len(prob_res) > 0 and prob_res[0] == '+':
                 res += 1
         return res
-        
+
+    def get_name_with_oj_info(self):
+        if len(show_oj_rating) == 0:
+            return self.name, ''
+        last_symbol_before_names = ':'
+        team_name = self.name[:self.name.rfind(last_symbol_before_names)]
+        if team_name not in team_members_with_oj_info:
+            return self.name, ''
+        json_info = {
+            'team': team_name,
+            'members': []
+        }
+        if True: # update existing names
+            team_members = self.name[self.name.rfind(last_symbol_before_names) + 1:].strip().split(', ')
+            updated_names = []
+            taken_name = [False for i in range(len(team_members_with_oj_info[team_name]))]
+            for name in team_members:
+                name = name.capitalize()
+                name_id = -1
+                for i, member in enumerate(team_members_with_oj_info[team_name]):
+                    if not taken_name[i] and name == member['name']:
+                        name_id = i
+                        break
+                if name_id == -1:
+                    updated_names.append(name)
+                    json_info['members'].append({'name': name, 'info': {}})
+                else:
+                    taken_name[name_id] = True
+                    info = team_members_with_oj_info[team_name][name_id]
+                    updated_names.append(get_colored_name(info, show_oj_rating[0]))
+                    json_info['members'].append(info)
+            # team_name += last_symbol_before_names + ' '
+            team_name += ' ('
+            team_name += ', '.join(updated_names)
+            json_info['rating'] = {
+                oj : get_team_rating([info['info'][oj]['rating'] for info in json_info['members'] if oj in info['info']]) for oj in show_oj_rating
+            }
+            team_name += ')'
+            if show_oj_rating[0] in json_info['rating'] and json_info['rating'][show_oj_rating[0]] > 0:
+                team_name += ', total = ' + get_colored_rating(json_info['rating'][show_oj_rating[0]], show_oj_rating[0])
+            return team_name, json.dumps(json_info)
+        else: # use full info from json
+            raise NotImplementedError
+
     def write(self, place, open_times, problem_openers, max_solved_problems, cnt_official_teams, f):
+        submissions_log = '<!--' + '\n'.join([f'{problem_id} {time} {result}' for problem_id, time, result in self.all_submissions]) + '-->'
         print('<tr class="participant_result">', file=f)
         print('<td class="st_place"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(place), file=f)
         team_title = self.name
         if self.name in team_members:
             team_title = team_members[self.name]
-        print('<td class="st_team" title="{}">{}</td>'.format('', self.name), file=f)
+        name_with_oj_info, json_with_oj_info = self.get_name_with_oj_info()
+        json_with_oj_info_div = ''
+        if len(show_oj_rating):
+            json_with_oj_info_div = f'<div class="teamInfoJson"><!--{json_with_oj_info}--></div>'
+        print('<td class="st_team" title="{}"><div class="displayedTeamName">{}</div><div class="teamSubmissionsLog">{}</div>{}</td>'.format('', name_with_oj_info, submissions_log, json_with_oj_info_div), file=f)
         print('<td class="st_extra">{}</td>'.format(self.region), file=f)
         for prob_res, prob_time, open_time, problem_opener in zip(self.problem_results, self.problem_times, open_times, problem_openers):
             background = ''
@@ -295,7 +442,7 @@ class Standings:
         return region, teams, problems_solved / min(statistic_team_number, teams), sum_place / min(statistic_team_number, teams), solved_by_twentiest_team
         
     def write_regions(self, f):
-        print('''<table class="region_statistic" width="50%"> <tr> <th>Show</th> <th>Region</th><th>Teams</th> <th>Average problems solved by top {} teams</th> <th>Average place taken by top {} teams</th> <th>Problems solved by {}<sup>th</sup> team </th> </tr>'''.format(statistic_team_number, statistic_team_number, statistic_team_number), file=f)
+        print('''<table class="region_statistic" width="50%"> <tr> <th>Show</th> <th>{}</th><th>Teams</th> <th>Average problems solved by top {} teams</th> <th>Average place taken by top {} teams</th> <th>Problems solved by {}<sup>th</sup> team </th> </tr>'''.format(region_column_name, statistic_team_number, statistic_team_number, statistic_team_number), file=f)
         regions = set()
         for result in self.all_results:
             regions.add(result.region)
@@ -329,6 +476,7 @@ class Standings:
             print('<link rel="stylesheet" href="{}styles/animate.css" type="text/css" />'.format(path_to_scripts), file=f)
             print('<link rel="stylesheet" href="{}styles/styles.css" type="text/css" />'.format(path_to_scripts), file=f)
             print('<link rel="stylesheet" href="{}styles/cf_styles.css" type="text/css" />'.format(path_to_scripts), file=f)
+            print('<link rel="stylesheet" href="{}styles/atcoder_styles.css" type="text/css" />'.format(path_to_scripts), file=f)
             print('<style id="styles"> table.standings td { height: 40px; } </style>', file=f)
         else:
             print('<link rel="stylesheet" href="http://ejudge.khai.edu/ejudge/unpriv.css" type="text/css" />', file=f)
@@ -347,14 +495,21 @@ class Standings:
             self.write_regions(f)
         
         #contest managing
-        print('<table class="region_statistic" width="50%"> <tr> <th> Start time </th> <th> Contest speed </th> <th>Penalty for wrong submission</th> <th> Start the contest </th> <th> Finish the contest </th> <th> Suspend the contest </th> </tr>', file=f)
+        show_ranking_col = ''
+        if len(show_oj_rating):
+            show_ranking_col = '<th>Show Ranking</th>'
+        print(f'<table class="region_statistic" width="50%"> <tr> <th> Start time </th> <th> Contest speed </th> <th>Penalty for wrong submission</th> <th> Start the contest </th> <th> Finish the contest </th> <th> Suspend the contest </th> {show_ranking_col}</tr>', file=f)
         print('<tr>', file=f)
         print('<td class="st_region" align="center"> <input type="text" id="contest_start_time" value="0:00:00" maxlength=7 style="width:100%"> </input> </td>', file=f)
-        print('<td class="st_region" align="center"> <input type="range" id="contest_speed" min="1" max="60" value="10"> </input> </td>', file=f)
+        print('<td class="st_region" align="center"> <input type="range" id="contest_speed" min="1" max="60" value="1"> </input> </td>', file=f)
         print('<td class="st_region" align="center"> <input style="width: 50px" type="number" id="penalty_points" min="1" max="20" value="{}"> </input> </td>'.format(penalty_points), file=f)
         print('<td class="st_region" align="center"> <button onclick=go()> Start </button> </td>', file=f)
         print('<td class="st_region" align="center"> <button disabled="true" onclick=finish()> Finish </button> </td>', file=f)
         print('<td class="st_region" align="center"> <button disabled="true" id="pause" onclick=pause()>Pause</button> </td>', file=f)
+        if len(show_oj_rating):
+            print('<td class="st_region" align="center"> <select id="show_ranking_select" onchange=updateTeamRating()>', file=f)
+            print('\n'.join([f'<option>{option_name}</option>' for option_name in show_oj_rating + ['None']]), file=f)
+            print('</td>', file=f)
         print('</tr>', file=f)
         print('</table>', file=f)
 
@@ -366,7 +521,7 @@ class Standings:
         print('<tr>', file=f)
         print('<th class="st_place">{}</th>'.format('Place'), file=f)
         print('<th class="st_team" style="min-width: 185px">{}</th>'.format('User'), file=f)
-        print('<th class="st_extra">{}</th>'.format('Region'), file=f)
+        print('<th class="st_extra">{}</th>'.format(region_column_name), file=f)
         for prob_id in range(problems):
             print('<th title="{}" class="st_prob" style="min-width: 32px">{}</th>'.format(get_problem_title(prob_id), problem_ids[prob_id]), file=f)
         print('<th  class="st_total">{}</th>'.format('Total'), file=f)
@@ -499,7 +654,10 @@ unofficial_teams = []
 if path_to_unofficial_teams != '':
     unofficial_teams = get_unofficial_teams(path_to_unofficial_teams)
 if path_to_team_regions != '':
-    team_regions = json.load(open(path_to_team_regions, 'r'))
+    team_regions_add = json.load(open(path_to_team_regions, 'r', encoding='utf8'))
+    for team, region in team_regions_add.items():
+        team_regions[team] = region
+        team_regions[team.replace(' ', '&sp&')] = region
     for team, update_team in team_members.items():
         if team.replace('&sp&', ' ') in team_regions:
             team = team.replace('&sp&', ' ')
@@ -557,17 +715,12 @@ else:
             if team.find(word) != -1:
                 region = 'Other'
                 break
-        if team[:2] == 's_' or team[:1] == 's' or team.lower().find('polit') != -1:
-            region = 'School'
-            pass
         team_name = team.replace('&sp&', ' ')
         if team_name[:11] == '_____*Polit':
             continue
         if team_name in unofficial_teams:
             region = 'Unofficial'
-        if team_name in ['EUNU_Thrasher', 'DSEA:BooleanTrue', 'UzhNU_KSUV', 'KNU_0_GB_RAM', 'KhNURE_hesoyam', 'cKhmPC_fsociety00.dat', 'Code_Math_And_Rock&Roll', 'KhNTU_SpaceCats', 'VNTU_Cheezzas']:
-            region = 'Default'
-        team_res = Result(team_name, region, results, times, solved, penalty)
+        team_res = Result(team_name, region, results, times, solved, penalty, all_submissions[team])
         print(team_name, region)
         res_team_regions[team_name] = region
         standings.add(team_res)
