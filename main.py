@@ -481,7 +481,7 @@ class Standings:
         else:
             print('<link rel="stylesheet" href="http://ejudge.khai.edu/ejudge/unpriv.css" type="text/css" />', file=f)
             print('<link rel="stylesheet" href="http://ejudge.khai.edu/ejudge/unpriv3.css" type="text/css" />', file=f)
-        print('<body onload=loadResults()>', file=f)
+        print('<body onload="loadResults()">', file=f)
         print('<script type="text/javascript" src="{}scripts/jquery.js"> </script>'.format(path_to_scripts), file=f)
         print('<script type="text/javascript" src="{}scripts/filter_regions.js"> </script>'.format(path_to_scripts), file=f)
         print('<script type="text/javascript" src="{}scripts/animate.js"> </script>'.format(path_to_scripts), file=f)
@@ -575,11 +575,13 @@ class Standings:
         self.write_stats(f)
         print('</table>', file=f)
         print('</div>', file=f)
+        print('<div id="footer" style="text-align: center; margin-bottom: 5px"></div>', file=f)
+        print('<script type="text/javascript" src="{}scripts/footer.js" onload="loadFooter()"></script>'.format(path_to_scripts), file=f)
         print('</div>', file=f)
         print('</div>', file=f)
         print('</div>', file=f)
-        
-        
+
+
 def process(content, region):
     text = codecs.decode(content, 'utf-8-sig')
     pos = text.find('class="standings"')
