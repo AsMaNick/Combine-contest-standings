@@ -43,6 +43,7 @@ if len(csv_files) > 0:
     import pandas as pd
     print('<div id="submissionsLog"><!--', file=f)
     all_status = {}
+    all_frozen = {}
     for csv_file, region in zip(csv_files, regions):
         data = pd.read_csv(path_to_data + csv_file, ';')
         for it, row in tqdm(data.iterrows()):
@@ -80,7 +81,12 @@ if len(csv_files) > 0:
                 continue
             if p in all_status:
                 wrong_attempts = all_status[p]
-            if status == 'OK':
+            if time_in_seconds > frozen_time * 60:
+                wrong_attempts += 1
+                result = '?' + str(wrong_attempts)
+                all_status[p] = wrong_attempts
+                all_frozen[p] = (time, wrong_attempts)
+            elif status == 'OK':
                 if time_openers[prob_id] > time_in_seconds:
                     time_openers[prob_id] = time_in_seconds
                     problem_openers[prob_id] = user_name.replace('&sp&', ' ')
@@ -315,6 +321,8 @@ class Result:
                         background = '#b0ffb0'
                 elif prob_res[0] == '-':
                     background = '#ffd0d0'
+                elif prob_res[0] == '?':
+                    background = '#fcffaa'
             if background != '':
                 background = 'background: ' + background
             print('<td style="{}" class="st_prob">{}'.format(background, prob_res, prob_time), end='', file=f)
@@ -370,7 +378,7 @@ class Standings:
                     total[num] += 1
                     if len(prob_res) > 1:
                         total[num] += int(prob_res[1:])
-                elif prob_res[0] == '-':
+                elif prob_res[0] == '-' or prob_res[0] == '?':
                     total[num] += int(prob_res[1:])
         total.append(sum(total))
         return total
@@ -699,6 +707,9 @@ else:
                     times.append(all_successful_submits[p])
                     solved += 1
                     penalty += get_penalty_by_time(all_successful_submits[p])
+                elif p in all_frozen:
+                    results.append('?' + str(all_frozen[p][1]))
+                    times.append(all_frozen[p][0])
                 else:
                     results.append('-' + str(all_status[p]))
                     times.append('')

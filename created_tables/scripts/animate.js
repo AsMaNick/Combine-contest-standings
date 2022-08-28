@@ -110,11 +110,11 @@ function Statistic(problems) {
     this.prepare = function() {
         this.ok_submissions[this.problems] = 0;
         this.all_submissions[this.problems] = 0;
-        for (var i = 0; i + 1 < this.problems; ++i) {
+        for (var i = 0; i < this.problems; ++i) {
             this.ok_submissions[this.problems] += this.ok_submissions[i];
             this.all_submissions[this.problems] += this.all_submissions[i];
         }
-        for (var i = 0; i < this.problems; ++i) {
+        for (var i = 0; i <= this.problems; ++i) {
             if (this.ok_submissions[i] == 0) {
                 this.percent_submissions[i] = 0;
             } else {
@@ -318,6 +318,12 @@ function updateStandingsToTime(to_time) {
                 was_wa_modified[id][problem_id] = 1;
             }
             //prob.style = 'background: #ffd0d0';
+        } else if (submission_result[0] == '?') {
+            prob.innerHTML = submission_result + '<div class="st_time">' + time + '</div>';
+            if (was_wa_modified[id][problem_id] != 2) {
+                prob.style = 'animation: color_change_frozen' + last_wa_parity[id][problem_id].toString() + ' 3s; animation-fill-mode: forwards;';
+                was_wa_modified[id][problem_id] = 2;
+            }
         } else if (is_opener) {
             prob.style = 'animation: color_change_ac_first 3s 1; animation-fill-mode: forwards;';
             //prob.style = 'background: #b0ffb0';
@@ -365,7 +371,7 @@ function updateStandingsToTime(to_time) {
             updateRating(id, itmo_rating.toFixed(2));
         }
         for (var j = 0; j < problems; ++j) {            
-            if (was_wa_modified[i][j] == 1) {
+            if (was_wa_modified[i][j]) {
                 last_wa_parity[i][j] ^= 1;
             }
         }

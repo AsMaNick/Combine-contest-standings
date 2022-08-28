@@ -33,3 +33,21 @@
     background-color: #ffd0d0;
   }
 }
+
+@keyframes color_change_frozen0 {
+  0% {
+    background-color: #f7ff1a;
+  }
+  100% {
+    background-color: #fcffaa;
+  }
+}
+
+@keyframes color_change_frozen1 {
+  0% {
+    background-color: #f7ff1b;
+  }
+  100% {
+    background-color: #fcffaa;
+  }
+}
