@@ -74,9 +74,8 @@ function myModify(index, elem) {
                 best_time[i] = probs[i];
                 best_time[i].style = 'background: #b0ffb0';
             } else if (cur_tm != '(9:99)') {
-                if (prob_result != '' && prob_result[0] == '-') {
-                    probs[i].style = 'background: #e0ffe0';
-                } else if (prob_result != '' && prob_result[0] == '?') {
+                probs[i].style = 'background: #e0ffe0';
+                if (prob_result != '' && prob_result[0] == '?') {
                     probs[i].style = 'background: #fcffaa';
                 }
             }
