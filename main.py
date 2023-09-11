@@ -44,10 +44,11 @@ if len(csv_files) > 0:
     print('<div id="submissionsLog"><!--', file=f)
     all_status = {}
     all_frozen = {}
+    assert len(csv_files) == len(regions), f'{len(csv_files)}, {len(regions)}'
     for csv_file, region in zip(csv_files, regions):
         data = pd.read_csv(path_to_data + csv_file, ';')
         for it, row in tqdm(data.iterrows()):
-            user_name = str(row['User_Name']).replace(' ', '&sp&')
+            user_name = str(row['User_Name']).strip().replace(' ', '&sp&')
             if row['Prob'][0] == '!' or bad_user(user_name):
                 print('Ignoring', it, row['Run_Id'], row['Prob'], user_name)
                 continue
@@ -63,7 +64,7 @@ if len(csv_files) > 0:
             time_in_seconds = dur_day * 3600 * 24 + hour * 3600 + minute * 60 + second
             if time_in_seconds > contest_duration * 60:
                 print(user_name, prob_id, hour, minute, row['Stat_Short'])
-                exit()
+                assert False, 'Exiting due to large time'
                 continue
             if (second != 0 and round_time == 'UP') or (second > 30 and round_time == 'CLOSEST'):
                 minute += 1
@@ -674,7 +675,7 @@ if path_to_team_regions != '':
         if team in team_regions:
             team_regions[update_team] = team_regions[team]
 standings_title = '<p align="center" style="font-family: times-new-roman"> \
-    <a style="float: left; margin: 13px; padding-left: 7px" href="../../"> <img width="30px" src="{}images/back_arrow.png"></a> \
+    <a style="position: absolute; left: 0; margin: 13px; padding-left: 7px" href="../../"> <img width="30px" src="{}images/back_arrow.png"></a> \
     <font size="7"> {} </font> </p> <p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p>'.format(path_to_scripts, olympiad_title, olympiad_date)
 standings = Standings(show_regions=show_regions, ignore_regions=ignore_regions)
 if len(csv_files) == 0:
