@@ -312,7 +312,10 @@ class Result:
         if len(show_oj_rating):
             json_with_oj_info_div = f'<div class="teamInfoJson"><!--{json_with_oj_info}--></div>'
         print('<td class="st_team" title="{}"><div class="displayedTeamName">{}</div><div class="teamSubmissionsLog">{}</div>{}</td>'.format('', name_with_oj_info, submissions_log, json_with_oj_info_div), file=f)
-        print('<td class="st_extra">{}</td>'.format(self.region), file=f)
+        updated_region = self.region
+        if show_flags:
+            updated_region = update_region_with_flag(updated_region, 8)
+        print(f'<td class="st_extra">{updated_region}</td>', file=f)
         for prob_res, prob_time, open_time, problem_opener in zip(self.problem_results, self.problem_times, open_times, problem_openers):
             background = ''
             if len(prob_res) > 0:
@@ -470,7 +473,12 @@ class Standings:
                 print('<td class="st_region" id="region_all" align="center"> <input type="checkbox" checked onchange="checkAll()"> </input> </td>', file=f)
             else:
                 print('<td class="st_region" align="center"> <input type="checkbox" checked onchange="filter()"> </input> </td>', file=f)
-            print('<td class="st_region" align="center">{}</td>'.format(region[0]), file=f)
+            updated_region = region[0]
+            region_align = 'center'
+            if show_flags:
+                updated_region = update_region_with_flag(updated_region, 9.5)
+                region_align = 'left'
+            print(f'<td class="st_region" align="{region_align}">{updated_region}</td>', file=f)
             print('<td class="st_region" align="center">{}</td>'.format(region[1]), file=f)
             print('<td class="st_region" align="center">{:.1f}</td>'.format(region[2]), file=f)
             print('<td class="st_region" align="center">{:.1f}</td>'.format(region[3]), file=f)
@@ -645,22 +653,39 @@ def process(content, region):
         if team_res.try_problems() == 0:
             continue
         standings.add(team_res)
-    
+
 
 def get_penalty_by_time(t):
     return int(t[1]) * 60 + int(t[3:5])
-    
+
 
 def starts_with(s, t):
     return s[:len(t)] == t
-    
+
 
 def get_unofficial_teams(path):
     f = open(path, 'r')
     teams = f.read().split('\n')
     return {team for team in teams}
-    
-    
+
+
+def update_region_with_flag(region, img_height):
+    flags = {
+        'Ukraine': 'ua.png',
+        'Romania': 'ro.png',
+        'North Macedonia': 'mk.png',
+        'Serbia': 'rs.png',
+        'Turkey': 'tr.png',
+        'Cyprus': 'cy.png',
+        'Bulgaria': 'bg.png',
+        'Greece': 'gr.png',
+        'Moldova': 'md.png'
+    }
+    if region in flags:
+        return f'<img height="{img_height}" src="{path_to_scripts}images/flags/{flags[region]}" alt="Flag">&nbsp;{region}'
+    return region
+
+
 unofficial_teams = []
 if path_to_unofficial_teams != '':
     unofficial_teams = get_unofficial_teams(path_to_unofficial_teams)

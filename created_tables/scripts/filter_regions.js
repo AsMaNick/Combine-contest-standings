@@ -1,10 +1,18 @@
 var ok_regions, best_time, all_submissions, ok_submissions;
 var place;
 
+function removeFlagFromRegionName(region) {
+    if (region.startsWith('<img')) {
+        return region.substring(region.lastIndexOf('>&nbsp;') + 7);
+    }
+    return region;
+}
+
 function updateRegions(index, elem) {
     var checkbox = elem.getElementsByTagName('input')[0];
     if (checkbox.checked) {
-        ok_regions.add(elem.getElementsByClassName('st_region')[1].innerHTML);
+        var region = removeFlagFromRegionName(elem.getElementsByClassName('st_region')[1].innerHTML);
+        ok_regions.add(region);
     }
 }
 
@@ -35,7 +43,7 @@ function getSubmissionResult(elem) {
 
 function myModify(index, elem) {
     elem.style = "";
-    var region = elem.getElementsByClassName('st_extra')[0].innerHTML;
+    var region = removeFlagFromRegionName(elem.getElementsByClassName('st_extra')[0].innerHTML);
     if (ok_regions.has(region)) {
         elem.hidden = false;
         var place_elem = elem.getElementsByClassName('st_place')[0].getElementsByTagName('input')[0];
