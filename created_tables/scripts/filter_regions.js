@@ -100,6 +100,31 @@ function updateStatistic(elem, arr) {
     }
 }
 
+function recalculateRatingITMO() {
+    loadStandingsSettings();
+    var max_solved_problems = 0, cnt_official_teams = 0;
+    for (var i = 0; i < all_teams_elem.length; ++i) {
+        if (all_teams_elem[i].hidden) {
+            continue;
+        }
+        if (all_place_elem[i].value != '-') {
+            ++cnt_official_teams;
+            var problems_solved = parseInt(all_total_elem[i].value);
+            max_solved_problems = Math.max(max_solved_problems, problems_solved);
+        }
+    }
+    for (var i = 0; i < all_teams_elem.length; ++i) {
+        if (all_teams_elem[i].hidden) {
+            continue;
+        }
+        if (all_place_elem[i].value != '-') {
+            var problems_solved = parseInt(all_total_elem[i].value);
+            var itmo_rating = calculate_itmo_rating(max_solved_problems, cnt_official_teams, all_place_elem[i].value, problems_solved);
+            updateRating(i, itmo_rating.toFixed(2));
+        }
+    }
+}
+
 function filter(call_fill_places) {
     if (!loaded) {
         return;
@@ -112,6 +137,7 @@ function filter(call_fill_places) {
     $(".row_region").each(updateRegions);
     place = 0;
     $(".participant_result").each(myModify);
+    recalculateRatingITMO();
     var all_results = new Array();
     for (var i = 0; i < all_teams_elem.length; ++i) {
         if (all_teams_elem[i].hidden) {

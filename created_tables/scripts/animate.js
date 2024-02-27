@@ -492,6 +492,26 @@ function getStartTime() {
     return res;
 }
 
+function loadStandingsSettings() {
+    if (document.getElementById('standingsSettings') === null) {
+        contest_duration = 300;
+        max_itmo_rating = 200;
+    } else {
+        var settings = document.getElementById('standingsSettings').innerHTML;
+        settings = settings.substr(5, settings.length - 8);
+        params = settings.split('\n');
+        for (var i = 0; i < params.length; ++i) {
+            var data = params[i].split(' ');
+            if (data[0] == 'contestDuration') {
+                contest_duration = parseInt(data[1]);
+            }
+            if (data[0] == 'maxItmoRating') {
+                max_itmo_rating = parseInt(data[1]);
+            }
+        }
+    }
+}
+
 function go(only_init) {
     if (!loaded || (is_animation && only_init === undefined)) {
         return;
@@ -525,23 +545,7 @@ function go(only_init) {
         fillY();
         all_submissions = [];
         var id = -1;
-        if (document.getElementById('standingsSettings') === null) {
-            contest_duration = 300;
-            max_itmo_rating = 200;
-        } else {
-            var settings = document.getElementById('standingsSettings').innerHTML;
-            settings = settings.substr(5, settings.length - 8);
-            params = settings.split('\n');
-            for (var i = 0; i < params.length; ++i) {
-                var data = params[i].split(' ');
-                if (data[0] == 'contestDuration') {
-                    contest_duration = parseInt(data[1]);
-                }
-                if (data[0] == 'maxItmoRating') {
-                    max_itmo_rating = parseInt(data[1]);
-                }
-            }
-        }
+        loadStandingsSettings();
         if (document.getElementById('submissionsLog') === null) {
             for (var i = 0; i < all_teams_elem.length; ++i) {
                 if (all_teams_elem[i].hidden) {
