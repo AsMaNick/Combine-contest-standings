@@ -119,7 +119,7 @@ function recalculateRatingITMO() {
         }
         if (all_place_elem[i].value != '-') {
             var problems_solved = parseInt(all_total_elem[i].value);
-            var itmo_rating = calculate_itmo_rating(max_solved_problems, cnt_official_teams, all_place_elem[i].value, problems_solved);
+            var itmo_rating = calculateRatingITMO(max_solved_problems, cnt_official_teams, all_place_elem[i].value, problems_solved);
             updateRating(i, itmo_rating.toFixed(2));
         }
     }

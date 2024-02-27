@@ -267,7 +267,7 @@ function getPlaces(all_results) {
     return places;
 }
 
-function calculate_itmo_rating(max_solved_problems, cnt_official_teams, place, total) {
+function calculateRatingITMO(max_solved_problems, cnt_official_teams, place, total) {
     var itmo_rating = 0;
     if (max_solved_problems > 0) {
         var min_place;
@@ -367,7 +367,7 @@ function updateStandingsToTime(to_time) {
             updateDirt(id, all_results[i].getDirt());
         }
         if (has_rating_col && all_place_elem[id].value != '-') {
-            var itmo_rating = calculate_itmo_rating(max_solved_problems, cnt_official_teams, places[i], all_results[i].total);
+            var itmo_rating = calculateRatingITMO(max_solved_problems, cnt_official_teams, places[i], all_results[i].total);
             updateRating(id, itmo_rating.toFixed(2));
         }
         for (var j = 0; j < problems; ++j) {            
@@ -411,7 +411,7 @@ function fillPlaces() {
         updatePenalty(id, all_results[i].penalty);
         updateDirt(id, all_results[i].getDirt());
         if (has_rating_col && all_place_elem[id].value != '-') {
-            var itmo_rating = calculate_itmo_rating(max_solved_problems, cnt_official_teams, places[i], all_results[i].total);
+            var itmo_rating = calculateRatingITMO(max_solved_problems, cnt_official_teams, places[i], all_results[i].total);
             updateRating(id, itmo_rating.toFixed(2));
         }
     }
