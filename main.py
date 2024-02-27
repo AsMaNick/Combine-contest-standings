@@ -260,8 +260,9 @@ class Result:
     def get_name_with_oj_info(self):
         if len(show_oj_rating) == 0:
             return self.name, ''
-        last_symbol_before_names = ':'
-        team_name = self.name[:self.name.rfind(last_symbol_before_names)]
+        assert team_members_format in ['Team: A, B, C', 'Team (A, B, C)']
+        last_symbol_before_names = ':' if team_members_format == 'Team: A, B, C' else '('
+        team_name = self.name[:self.name.rfind(last_symbol_before_names)].strip()
         if team_name not in team_members_with_oj_info:
             return self.name, ''
         json_info = {
@@ -269,11 +270,12 @@ class Result:
             'members': []
         }
         if True: # update existing names
-            team_members = self.name[self.name.rfind(last_symbol_before_names) + 1:].strip().split(', ')
+            team_members_last_char = (len(self.name) if last_symbol_before_names == 'Team: A, B, C' else -1)
+            team_members = self.name[self.name.rfind(last_symbol_before_names) + 1:team_members_last_char].strip().split(', ')
             updated_names = []
             taken_name = [False for i in range(len(team_members_with_oj_info[team_name]))]
             for name in team_members:
-                name = name.capitalize()
+                name = ' '.join([name_part.capitalize() for name_part in name.split()])
                 name_id = -1
                 for i, member in enumerate(team_members_with_oj_info[team_name]):
                     if not taken_name[i] and name == member['name']:
@@ -700,8 +702,8 @@ if path_to_team_regions != '':
         if team in team_regions:
             team_regions[update_team] = team_regions[team]
 standings_title = '<p align="center" style="font-family: times-new-roman"> \
-    <a style="position: absolute; left: 0; margin: 13px; padding-left: 7px" href="../../"> <img width="30px" src="{}images/back_arrow.png"></a> \
-    <font size="7"> {} </font> </p> <p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p>'.format(path_to_scripts, olympiad_title, olympiad_date)
+    <a style="position: absolute; left: 0; margin: 13px; padding-left: 7px" href="{}"> <img width="30px" src="{}images/back_arrow.png"></a> \
+    <font size="7"> {} </font> </p> <p align="center" style="font-family: times-new-roman"> <font size="7"> {} </font> </p>'.format(back_arrow_leads_to, path_to_scripts, olympiad_title, olympiad_date)
 standings = Standings(show_regions=show_regions, ignore_regions=ignore_regions)
 if len(csv_files) == 0:
     for link, region in links:
