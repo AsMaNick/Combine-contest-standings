@@ -127,8 +127,15 @@ function Statistic(problems) {
 
 var statistic;
 
+function isSummaryStandings() {
+    return contest_duration == 0;
+}
+
 function loadResults() {
-    updateButtonsAvailability(false);
+    loadStandingsSettings();
+    if (!isSummaryStandings()) {
+        updateButtonsAvailability(false);
+    }
     all_teams_elem = document.getElementsByClassName('participant_result');
     all_place_elem = new Array(all_teams_elem.length);
     all_total_elem = new Array(all_teams_elem.length);

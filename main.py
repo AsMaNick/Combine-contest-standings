@@ -1,18 +1,19 @@
-import requests
-import json
-import dis
-import codecs
-import sys
 import os
+import sys
+import dis
 import math
+import json
+import pickle
+import codecs
+import requests
 from tqdm import tqdm
+from settings import *
+from collections import defaultdict
+from camps_combiner import CompressedStandings
 
 
 def bad_user(user_name):
     return user_name in ['Judge_Main', 'nan', 'judge13', 'ejudge&sp&administrator']
-    
-    
-from settings import *
 
 assert problems == len(problem_names)
 assert((show_oj_rating != []) == (path_to_oj_info != ''))
@@ -45,6 +46,7 @@ if len(csv_files) > 0:
     all_status = {}
     all_frozen = {}
     assert len(csv_files) == len(regions), f'{len(csv_files)}, {len(regions)}'
+    solved_problems_including_upsolving = defaultdict(set)
     for csv_file, region in zip(csv_files, regions):
         data = pd.read_csv(path_to_data + csv_file, ';')
         for it, row in tqdm(data.iterrows()):
@@ -62,6 +64,9 @@ if len(csv_files) > 0:
             second = int(row['Dur_Sec'])
             dur_day = int(row['Dur_Day']) if 'Dur_Day' in row else 0
             time_in_seconds = dur_day * 3600 * 24 + hour * 3600 + minute * 60 + second
+            status = row['Stat_Short']
+            if status == 'OK':
+                solved_problems_including_upsolving[user_name.replace('&sp&', ' ')].add(prob_id)
             if time_in_seconds > contest_duration * 60:
                 print(user_name, prob_id, hour, minute, row['Stat_Short'])
                 assert False, 'Exiting due to large time'
@@ -72,7 +77,6 @@ if len(csv_files) > 0:
                     hour += 1
                     minute = 0
             time = '({}:{}{})'.format(hour, minute // 10, minute % 10)
-            status = row['Stat_Short']
             team_regions[user_name] = region
             if status == 'IG' or (status == 'CE' and ignore_compilation_error):
                 continue
@@ -487,7 +491,26 @@ class Standings:
             print('<td class="st_region" align="center">{}</td>'.format(region[4]), file=f)
             print('</tr>', file=f)
         print('</table>', file=f)
-        
+
+    def get_places(self):
+        places = []
+        real_place = 0
+        cur_res = 0
+        while cur_res < len(self.all_results):
+            start_real_place = real_place
+            cur = cur_res
+            while cur < len(self.all_results) and (self.all_results[cur].region in self.ignore_regions or (self.all_results[cur].total == self.all_results[cur_res].total and self.all_results[cur].penalty == self.all_results[cur_res].penalty)):
+                if self.all_results[cur].region not in self.ignore_regions:
+                    real_place += 1
+                cur += 1
+            place = str(start_real_place + 1)
+            if start_real_place + 1 != real_place:
+                place += '-' + str(real_place)
+            for i in range(cur_res, cur):
+                places.append(place)
+            cur_res = cur
+        return places, real_place
+
     def write(self, f=sys.stdout):
         if True:
             print('<link rel="stylesheet" href="{}styles/unpriv.css" type="text/css" />'.format(path_to_scripts), file=f)
@@ -556,32 +579,15 @@ class Standings:
                 if len(prob_res) > 0 and prob_res[0] == '+':
                     open_times[num] = min(open_times[num], prob_time)
                 num += 1
-        places = []
-        real_place = 0
-        cur_res = 0
-        while cur_res < len(self.all_results):
-            start_real_place = real_place
-            cur = cur_res
-            while cur < len(self.all_results) and (self.all_results[cur].region in self.ignore_regions or (self.all_results[cur].total == self.all_results[cur_res].total and self.all_results[cur].penalty == self.all_results[cur_res].penalty)):
-                if self.all_results[cur].region not in self.ignore_regions:
-                    real_place += 1
-                cur += 1
-            place = str(start_real_place + 1)
-            if start_real_place + 1 != real_place:
-                place += '-' + str(real_place)
-            for i in range(cur_res, cur):
-                places.append(place)
-            cur_res = cur
-            
+        places, cnt_official_teams = self.get_places()
         place = 0
         max_solved_problems = 0
         for place, result in zip(places, self.all_results):
-            if result.region not in self.ignore_regions:       
+            if result.region not in self.ignore_regions:
                 max_solved_problems = result.solved_problems()
                 break
-        cnt_official_teams = real_place
         for place, result in zip(places, self.all_results):
-            if result.region in self.ignore_regions:            
+            if result.region in self.ignore_regions:
                 result.write('-', open_times, self.problem_openers, max_solved_problems, cnt_official_teams, f)
             else:
                 result.write(place, open_times, self.problem_openers, max_solved_problems, cnt_official_teams, f)
@@ -771,3 +777,6 @@ standings.sort()
 standings.write(f)
 print(problem_openers)
 print(time_openers)
+with open(f'created_tables/{standings_file_name}.pickle', 'wb') as wf:
+    compressed_standings = CompressedStandings(standings, contest_duration, max_itmo_rating, olympiad_title, solved_problems_including_upsolving)
+    pickle.dump(compressed_standings, wf)
