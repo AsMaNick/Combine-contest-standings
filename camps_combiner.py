@@ -1,5 +1,6 @@
 import pickle
 from collections import defaultdict
+from camps_combiner_settings import *
 
 
 def calculate_rating_itmo(max_itmo_rating, n_solved_problems, place, max_solved_problems, cnt_official_teams):
@@ -13,7 +14,9 @@ def calculate_rating_itmo(max_itmo_rating, n_solved_problems, place, max_solved_
     return 0.5 * max_itmo_rating * n_solved_problems / max_solved_problems * (2 * cnt_official_teams - 2) / (cnt_official_teams + min_place - 2)
 
 
-def get_day_number(title):
+def get_day_number(title, day_number):
+    if day_number is not None:
+        return day_number
     pos = title.lower().find('day ')
     assert pos != -1
     pos += 4
@@ -46,9 +49,9 @@ class CompressedResult:
 
 
 class CompressedStandings:
-    def __init__(self, standings, contest_duration, max_itmo_rating, title, solved_problems_including_upsolving):
+    def __init__(self, standings, contest_duration, max_itmo_rating, title, solved_problems_including_upsolving, day_number=None):
         self.title = title
-        self.day_number = get_day_number(title)
+        self.day_number = get_day_number(title, day_number)
         self.n_problems = len(standings.problem_openers)
         places, cnt_official_teams = standings.get_places()
         official_results = [result.solved_problems() for result in standings.all_results if result.region not in standings.ignore_regions]
@@ -68,7 +71,7 @@ class ParticipantResults:
         self.results = [None for _ in range(n_standings)]
 
     def add_result(self, num, result):
-        assert self.results[num] is None
+        assert self.results[num] is None, f'{num} {result.raw_name}'
         self.results[num] = result
 
     def get_average_rating_itmo(self):
@@ -215,12 +218,9 @@ RJ is the total number of rejected submissions before first AC for each problem'
     print(f'<th title="{upsolved_title}" class="st_pen">Upsolved&nbspⓘ</th>', file=f)
 
 
-def write(all_standings, all_results, filename,
-          path_to_scripts='./', back_arrow_leads_to='../',
-          camp_title='Osijek Competitive Programming Camp, 2024 winter',
-          camp_dates='Osijek, Croatia, February 17-25, 2024',
-          show_oj_rating=['AtCoder', 'CF'], region_column_name='Type', show_flags=False,
-          statistic_team_number=4, max_itmo_rating=200):
+def write(all_standings, all_results, filename, path_to_scripts, back_arrow_leads_to,
+          camp_title, camp_dates, show_oj_rating, region_column_name, show_flags,
+          statistic_team_number, max_itmo_rating):
     with open(filename, 'w', encoding='utf-8') as f:
         print('<div id="standingsSettings"><!--', file=f)
         print('contestDuration {}'.format(0), file=f)
@@ -269,11 +269,14 @@ def write(all_standings, all_results, filename,
         print('<th class="st_team" style="min-width: 300px">{}</th>'.format('User'), file=f)
         print('<th class="st_extra">{}</th>'.format(region_column_name), file=f)
         for contest_id in range(len(all_standings)):
-            print(f'<th title="{all_standings[contest_id].title}" class="st_prob" style="min-width: 40px"><a href="../{all_standings[contest_id].day_number}/standings.html" style="text-decoration: none; color: inherit">Day {all_standings[contest_id].day_number}</a></th>', file=f)
+            print(f'<th title="{all_standings[contest_id].title}" class="st_prob" style="min-width: 40px"><a href="../{get_folder_by_day_number(all_standings[contest_id].day_number)}/standings.html" style="text-decoration: none; color: inherit">{day_header_name} {all_standings[contest_id].day_number}</a></th>', file=f)
         write_statistics_headers(f)
         places = get_places(all_results)
         for place, (results, raw_name) in zip(places, all_results):
-            assert min([result.raw_name == raw_name for result in results.results if result is not None]) == True
+            raw_names = [result.raw_name for result in results.results if result is not None]
+            assert raw_names
+            if min([result.raw_name == raw_names[0] for result in results.results if result is not None]) != True:
+                print(f'Different raw names found: {sorted(list(set(raw_names)))}')
             some_result = [result for result in results.results if result is not None][0]
             print('<tr class="participant_result">', file=f)
             print(f'<td class="st_place"><input style="width: 100%; outline: none; border:none" readonly type="text" value={place}></input></td>', file=f)
@@ -306,15 +309,22 @@ def write(all_standings, all_results, filename,
         print('</div>', file=f)
 
 
+def extract_team_name(name):
+    pos = name.rfind(' (')
+    if pos == -1:
+        print(f'Could not extract team name: {name}')
+        return name
+    return name[:pos]
+
+
 if __name__ == '__main__':
-    filenames = [
-        f'data/2024_osijek_winter/standings/{i}.pickle' for i in [1, 2, 4, 5, 6, 8, 9]
-    ]
     all_standings = [load_standings(filename) for filename in filenames]
     results_by_participant = defaultdict(lambda: ParticipantResults(len(all_standings)))
     for num, standings in enumerate(all_standings):
         for result in standings.all_results:
-            results_by_participant[result.raw_name].add_result(num, result)
+            results_by_participant[extract_team_name(result.displayed_name)].add_result(num, result)
     all_results = [(results, raw_name) for raw_name, results in results_by_participant.items()]
     all_results.sort(reverse=True)
-    write(all_standings, all_results, 'created_tables/standings.html')
+    write(all_standings, all_results, 'created_tables/standings.html', path_to_scripts, back_arrow_leads_to,
+          camp_title, camp_dates, show_oj_rating, region_column_name, show_flags,
+          statistic_team_number, max_itmo_rating)

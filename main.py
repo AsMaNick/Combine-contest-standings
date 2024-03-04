@@ -274,7 +274,7 @@ class Result:
             'members': []
         }
         if True: # update existing names
-            team_members_last_char = (len(self.name) if last_symbol_before_names == 'Team: A, B, C' else -1)
+            team_members_last_char = (len(self.name) if team_members_format == 'Team: A, B, C' else -1)
             team_members = self.name[self.name.rfind(last_symbol_before_names) + 1:team_members_last_char].strip().split(', ')
             updated_names = []
             taken_name = [False for i in range(len(team_members_with_oj_info[team_name]))]
@@ -778,5 +778,5 @@ standings.write(f)
 print(problem_openers)
 print(time_openers)
 with open(f'created_tables/{standings_file_name}.pickle', 'wb') as wf:
-    compressed_standings = CompressedStandings(standings, contest_duration, max_itmo_rating, olympiad_title, solved_problems_including_upsolving)
+    compressed_standings = CompressedStandings(standings, contest_duration, max_itmo_rating, olympiad_title, solved_problems_including_upsolving, day_number=globals().get('contest_stage'))
     pickle.dump(compressed_standings, wf)
