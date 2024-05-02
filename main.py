@@ -262,13 +262,24 @@ class Result:
         return res
 
     def get_name_with_oj_info(self):
-        if len(show_oj_rating) == 0:
-            return self.name, ''
         assert team_members_format in ['Team: A, B, C', 'Team (A, B, C)']
+
+        def get_name_without_oj_info(name):
+            if team_members_format == 'Team: A, B, C':
+                pos = name.rfind(': ')
+                if pos != -1:
+                    return f'{name[:pos]} ({name[pos + 2:]})'
+            return name
+
+        if len(show_oj_rating) == 0:
+            return get_name_without_oj_info(self.name), ''
         last_symbol_before_names = ':' if team_members_format == 'Team: A, B, C' else '('
+        if self.name.rfind(last_symbol_before_names) == -1:
+            print(f'Could not extract team name: {self.name}')
+            exit(47)
         team_name = self.name[:self.name.rfind(last_symbol_before_names)].strip()
         if team_name not in team_members_with_oj_info:
-            return self.name, ''
+            return get_name_without_oj_info(self.name), ''
         json_info = {
             'team': team_name,
             'members': []

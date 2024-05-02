@@ -75,8 +75,31 @@ class ParticipantResults:
         self.results[num] = result
 
     def get_average_rating_itmo(self):
-        ratings = [result.rating_itmo for result in self.results if result is not None]
-        return sum(ratings) / len(ratings) if ratings else 0
+        ratings = [result.rating_itmo if result is not None else None for result in self.results]
+        if len([rating for rating in ratings if rating is not None]) == 0:
+            return 0
+        if rating_averaging_method.startswith('avg'):
+            ratings = [rating for rating in ratings if rating is not None]
+            return sum(ratings) / len(ratings) if ratings else 0
+        else:
+            ratings = [rating if rating is not None else 0 for rating in ratings]
+            ratings = list(reversed(sorted(ratings)))
+            n_standings = len(self.results)
+            if rating_averaging_method.startswith('except'):
+                not_count = max(0, min(n_standings - 1, int(rating_averaging_method[6:])))
+                ratings = ratings[:-not_count]
+                return sum(ratings) / len(ratings) if ratings else 0
+            elif rating_averaging_method.startswith('ucup'):
+                k = float(rating_averaging_method[4:])
+                assert 0 < k < 1
+                pw = 1
+                tot = 0
+                for r in ratings:
+                    tot += pw * r
+                    pw *= k
+                mx_coef = ((k ** n_standings) - 1) / (k - 1)
+                return tot / mx_coef
+        raise KeyError(rating_averaging_method)
 
     def get_average_dirt(self):
         dirts = [result.dirt for result in self.results if result is not None]
@@ -198,12 +221,26 @@ def write_regions(f, region_column_name, statistic_team_number, stats_region, sh
 
 
 def write_statistics_headers(f):
-    rating_itmo_title = '''Average rating ITMO calculated by the following formula for each contest:
+    def get_average_title():
+        if rating_averaging_method.startswith('avg'):
+            return '''Assuming that team participated in n contests and its ratings sorted in non-increasing order are r[0], r[1], ..., r[n - 1],
+average rating is calculated as (sum r[i]) / n.'''
+        elif rating_averaging_method.startswith('except'):
+            not_count = int(rating_averaging_method[6:])
+            return '''Assuming that there were n contests and team ratings sorted in non-increasing order are r[0], r[1], ..., r[n - 1],
+average rating is calculated as average number among max(1, n - 2) best ratings: (r[0] + r[1] + ... + r[max(0, n - 3)]) / max(1, n - 2).'''
+        elif rating_averaging_method.startswith('ucup'):
+            k = float(rating_averaging_method[4:])
+            return f'''Assuming that there were n contests and team ratings sorted in non-increasing order are r[0], r[1], ..., r[n - 1],
+average rating is calculated as (sum r[i] * {k}^i) * (1 - {k}) / (1 - {k}^n).'''
+    rating_itmo_title = f'''Average rating ITMO calculated by the following formula for each contest:
 100 * A / B * (2n - 2) / (n + p - 2), where
 A is the number of problems solved by the team,
 B is the maximum number of problems solved by some team,
 n is the number of teams that made at least one submission,
-p is the place of the team'''
+p is the place of the team.
+
+{get_average_title()}'''
     solved_title = '''Total number of problems solved during contests'''
     upsolved_title = '''Total number of problems upsolved after contests'''
     freezing_title = '''Average number of problems solved during the last hour of the contest'''
@@ -225,6 +262,7 @@ def write(all_standings, all_results, filename, path_to_scripts, back_arrow_lead
         print('<div id="standingsSettings"><!--', file=f)
         print('contestDuration {}'.format(0), file=f)
         print('maxItmoRating {}'.format(max_itmo_rating), file=f)
+        print('ratingAveragingMethod {}'.format(rating_averaging_method), file=f)
         print('--></div>', file=f)
         for styles_file in ['unpriv.css', 'unpriv3.css', 'animate.css', 'styles.css', 'cf_styles.css', 'atcoder_styles.css', 'summary_standings.css']:
             print(f'<link rel="stylesheet" href="{path_to_scripts}styles/{styles_file}" type="text/css" />', file=f)

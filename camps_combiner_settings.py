@@ -15,3 +15,4 @@ show_flags = False
 statistic_team_number = 4
 max_itmo_rating = 200
 day_header_name = 'Day'
+rating_averaging_method = 'ucup0.75'
