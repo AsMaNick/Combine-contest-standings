@@ -1,6 +1,6 @@
 var time_delay = 5000;
 var contest_penalty = 20;
-var contest_duration = 300, max_itmo_rating = 200;
+var contest_duration = 300, max_itmo_rating = 200, rating_averaging_method = 'avg';
 var num = 0;
 var all_teams_elem, all_place_elem, all_total_elem, all_penalty_elem, all_dirt_elem, all_rating_elem;
 var has_rating_col = true;
@@ -499,10 +499,26 @@ function getStartTime() {
     return res;
 }
 
+function getHrefParams() {
+    var res = {};
+    const startParams = document.location.href.indexOf('?');
+    if (startParams != -1) {
+        var params = document.location.href.substring(startParams + 1).split('&');
+        for (var param of params) {
+            var data = param.split('=');
+            if (data.length == 2) {
+                res[data[0]] = data[1];
+            }
+        }
+    }
+    return res;
+}
+
 function loadStandingsSettings() {
+    contest_duration = 300;
+    max_itmo_rating = 200;
+    rating_averaging_method = 'avg';
     if (document.getElementById('standingsSettings') === null) {
-        contest_duration = 300;
-        max_itmo_rating = 200;
     } else {
         var settings = document.getElementById('standingsSettings').innerHTML;
         settings = settings.substr(5, settings.length - 8);
@@ -511,11 +527,16 @@ function loadStandingsSettings() {
             var data = params[i].split(' ');
             if (data[0] == 'contestDuration') {
                 contest_duration = parseInt(data[1]);
-            }
-            if (data[0] == 'maxItmoRating') {
+            } else if (data[0] == 'maxItmoRating') {
                 max_itmo_rating = parseInt(data[1]);
+            } else if (data[0] == 'ratingAveragingMethod') {
+                rating_averaging_method = data[1];
             }
         }
+    }
+    var href_params = getHrefParams();
+    if ('ratingAveragingMethod' in href_params) {
+        rating_averaging_method = href_params['ratingAveragingMethod'];
     }
 }
 

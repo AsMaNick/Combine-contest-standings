@@ -118,12 +118,53 @@ function sort_summary_table_by_rating() {
     }
 }
 
+function calculateAverageRating(ratings) {
+    if (ratings.length == 0) {
+        return 0;
+    }
+    if ((rating_averaging_method === null) || rating_averaging_method == 'avg') {
+        var tot = 0;
+        for (var rating of ratings) {
+            tot += rating;
+        }
+        return tot / ratings.length;
+    } else {
+        const n_standings = all_teams_elem[0].getElementsByClassName('st_prob').length;
+        var sorted_ratings = ratings.slice();
+        while (sorted_ratings.length < n_standings) {
+            sorted_ratings.push(0);
+        }
+        sorted_ratings = sorted_ratings.toSorted(function(a, b) { return a - b; } ).toReversed();
+        if (rating_averaging_method.startsWith('except')) {
+            var not_count = Math.max(0, Math.min(n_standings - 1, parseInt(rating_averaging_method.substring(6))));
+            sorted_ratings = sorted_ratings.slice(0, sorted_ratings.length - not_count);
+            var tot = 0;
+            for (var rating of sorted_ratings) {
+                tot += rating;
+            }
+            return tot / sorted_ratings.length;
+        } else if (rating_averaging_method.startsWith('ucup')) {
+            const k = parseFloat(rating_averaging_method.substring(4));
+            const mx_coef = (Math.pow(k, n_standings) - 1) / (k - 1);
+            var pw = 1, tot = 0;
+            for (var r of sorted_ratings) {
+                tot += pw * r;
+                pw *= k;
+            }
+            return tot / mx_coef;
+        }
+    }
+    return 0;
+}
+
 function fillSummaryDayInfo(info_to_show) {
     var id_to_show = ["Problems solved", "Rating", "Solved during freezing", "Dirt", "Problems upsolved"].indexOf(info_to_show)
     if (info_to_show == "Rating") {
         const n_days = all_teams_elem[0].getElementsByClassName('st_prob').length;
-        var sum_rating = new Array(all_teams_elem.length).fill(0);
-        var days_participated = new Array(all_teams_elem.length).fill(0);
+        var ratings_by_id = new Array(all_teams_elem.length);
+        for (var i = 0; i < ratings_by_id.length; ++i) {
+            ratings_by_id[i] = [];
+        }
         for (var day = 0; day < n_days; ++day) {
             var max_solved_problems = 0, all_results = [];
             for (var i = 0; i < all_teams_elem.length; ++i) {
@@ -159,19 +200,14 @@ function fillSummaryDayInfo(info_to_show) {
                 var rating_itmo = calculateRatingITMO(max_solved_problems, all_results.length, places[i], all_results[i].total);
                 var days = all_teams_elem[all_results[i].id].getElementsByClassName('st_prob');
                 days[day].getElementsByTagName('input')[0].value = rating_itmo.toFixed(2);
-                ++days_participated[all_results[i].id];
-                sum_rating[all_results[i].id] += rating_itmo;
+                ratings_by_id[all_results[i].id].push(rating_itmo);
             }
         }
         for (var i = 0; i < all_teams_elem.length; ++i) {
             if (all_teams_elem[i].hidden) {
                 continue;
             }
-            average_rating = 0;
-            if (days_participated[i] > 0) {
-                average_rating = sum_rating[i] / days_participated[i];
-            }
-            all_rating_elem[i].value = average_rating.toFixed(2);
+            all_rating_elem[i].value = calculateAverageRating(ratings_by_id[i]).toFixed(2);
         }
         sort_summary_table_by_rating();
     } else {
