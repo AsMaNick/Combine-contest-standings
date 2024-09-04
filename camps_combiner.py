@@ -1,3 +1,4 @@
+import json
 import pickle
 from collections import defaultdict
 from camps_combiner_settings import *
@@ -69,13 +70,17 @@ class CompressedStandings:
 class ParticipantResults:
     def __init__(self, n_standings):
         self.results = [None for _ in range(n_standings)]
+        self.is_author = [None for _ in range(n_standings)]
 
     def add_result(self, num, result):
         assert self.results[num] is None, f'{num} {result.raw_name}'
         self.results[num] = result
 
+    def set_is_author(self, num, info):
+        self.is_author[num] = info
+
     def get_average_rating_itmo(self):
-        ratings = [result.rating_itmo if result is not None else None for result in self.results]
+        ratings = [result.rating_itmo if result is not None else None for result, author in zip(self.results, self.is_author) if author is None]
         if len([rating for rating in ratings if rating is not None]) == 0:
             return 0
         if rating_averaging_method.startswith('avg'):
@@ -84,7 +89,7 @@ class ParticipantResults:
         else:
             ratings = [rating if rating is not None else 0 for rating in ratings]
             ratings = list(reversed(sorted(ratings)))
-            n_standings = len(self.results)
+            n_standings = len(ratings)
             if rating_averaging_method.startswith('except'):
                 not_count = max(0, min(n_standings - 1, int(rating_averaging_method[6:])))
                 ratings = ratings[:-not_count]
@@ -118,6 +123,8 @@ class ParticipantResults:
         return sum(solved) / len(solved) if solved else 0
 
     def get_rating_itmo_at(self, i):
+        if self.is_author[i] is not None:
+            return self.is_author[i]
         return f'{self.results[i].rating_itmo:.2f}' if self.results[i] is not None else '-'
 
     def __lt__(self, other):
@@ -227,11 +234,11 @@ def write_statistics_headers(f):
 average rating is calculated as (sum r[i]) / n.'''
         elif rating_averaging_method.startswith('except'):
             not_count = int(rating_averaging_method[6:])
-            return '''Assuming that there were n contests and team ratings sorted in non-increasing order are r[0], r[1], ..., r[n - 1],
+            return '''Assuming that there were n contests (not counting contests where the team was author or seen the problems before) and team ratings sorted in non-increasing order are r[0], r[1], ..., r[n - 1],
 average rating is calculated as average number among max(1, n - 2) best ratings: (r[0] + r[1] + ... + r[max(0, n - 3)]) / max(1, n - 2).'''
         elif rating_averaging_method.startswith('ucup'):
             k = float(rating_averaging_method[4:])
-            return f'''Assuming that there were n contests and team ratings sorted in non-increasing order are r[0], r[1], ..., r[n - 1],
+            return f'''Assuming that there were n contests (not counting contests where the team was author or seen the problems before) and team ratings sorted in non-increasing order are r[0], r[1], ..., r[n - 1],
 average rating is calculated as (sum r[i] * {k}^i) * (1 - {k}) / (1 - {k}^n).'''
     rating_itmo_title = f'''Average rating ITMO calculated by the following formula for each contest:
 100 * A / B * (2n - 2) / (n + p - 2), where
@@ -315,7 +322,7 @@ def write(all_standings, all_results, filename, path_to_scripts, back_arrow_lead
             assert raw_names
             if min([result.raw_name == raw_names[0] for result in results.results if result is not None]) != True:
                 print(f'Different raw names found: {sorted(list(set(raw_names)))}')
-            some_result = [result for result in results.results if result is not None][0]
+            some_result = [result for result in results.results if result is not None][-1]
             print('<tr class="participant_result">', file=f)
             print(f'<td class="st_place"><input style="width: 100%; outline: none; border:none" readonly type="text" value={place}></input></td>', file=f)
             json_with_oj_info_div = ''
@@ -355,12 +362,22 @@ def extract_team_name(name):
     return name[:pos]
 
 
+def set_contest_authors():
+    if path_to_contest_authors == '':
+        return
+    with open(path_to_contest_authors, 'r') as f:
+        data = json.load(f)
+        for author_info in data['authors']:
+            results_by_participant[author_info['name']].set_is_author(author_info['contest_id'], author_info['status'])
+
+
 if __name__ == '__main__':
     all_standings = [load_standings(filename) for filename in filenames]
     results_by_participant = defaultdict(lambda: ParticipantResults(len(all_standings)))
     for num, standings in enumerate(all_standings):
         for result in standings.all_results:
             results_by_participant[extract_team_name(result.displayed_name)].add_result(num, result)
+    set_contest_authors()
     all_results = [(results, raw_name) for raw_name, results in results_by_participant.items()]
     all_results.sort(reverse=True)
     write(all_standings, all_results, 'created_tables/standings.html', path_to_scripts, back_arrow_leads_to,

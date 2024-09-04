@@ -118,7 +118,7 @@ function sort_summary_table_by_rating() {
     }
 }
 
-function calculateAverageRating(ratings) {
+function calculateAverageRating(ratings, skipped_days) {
     if (ratings.length == 0) {
         return 0;
     }
@@ -129,10 +129,14 @@ function calculateAverageRating(ratings) {
         }
         return tot / ratings.length;
     } else {
-        const n_standings = all_teams_elem[0].getElementsByClassName('st_prob').length;
+        var n_standings = all_teams_elem[0].getElementsByClassName('st_prob').length;
         var sorted_ratings = ratings.slice();
-        while (sorted_ratings.length < n_standings) {
+        while (sorted_ratings.length + skipped_days < n_standings) {
             sorted_ratings.push(0);
+        }
+        n_standings = sorted_ratings.length;
+        if (n_standings == 0) {
+            return 0;
         }
         sorted_ratings = sorted_ratings.toSorted(function(a, b) { return a - b; } ).toReversed();
         if (rating_averaging_method.startsWith('except')) {
@@ -158,7 +162,7 @@ function calculateAverageRating(ratings) {
 }
 
 function fillSummaryDayInfo(info_to_show) {
-    var id_to_show = ["Problems solved", "Rating", "Solved during freezing", "Dirt", "Problems upsolved"].indexOf(info_to_show)
+    var id_to_show = ["Problems solved", "Rating", "Solved during freezing", "Dirt", "Problems upsolved"].indexOf(info_to_show);
     if (info_to_show == "Rating") {
         const n_days = all_teams_elem[0].getElementsByClassName('st_prob').length;
         var ratings_by_id = new Array(all_teams_elem.length);
@@ -207,7 +211,13 @@ function fillSummaryDayInfo(info_to_show) {
             if (all_teams_elem[i].hidden) {
                 continue;
             }
-            all_rating_elem[i].value = calculateAverageRating(ratings_by_id[i]).toFixed(2);
+            var skipped_days = 0;
+            const days = all_teams_elem[i].getElementsByClassName('st_prob');
+            for (var day = 0; day < days.length; ++day) {
+                const stats_value = days[day].getElementsByTagName('input')[0].value;
+                skipped_days += (stats_value == 'K' || stats_value == 'A');
+            }
+            all_rating_elem[i].value = calculateAverageRating(ratings_by_id[i], skipped_days).toFixed(2);
         }
         sort_summary_table_by_rating();
     } else {
