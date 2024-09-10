@@ -15,6 +15,38 @@ from camps_combiner import CompressedStandings
 def bad_user(user_name):
     return user_name in ['Judge_Main', 'nan', 'judge13', 'ejudge&sp&administrator']
 
+
+def dump_problem_stats(stats_by_problem):
+    with open('created_tables/problem_stats.json', 'w') as problem_stats_f:
+        json.dump(stats_by_problem, problem_stats_f, indent=2)
+    with open('created_tables/problem_stats.txt', 'w') as problem_stats_f:
+        for problem_id, stats in sorted(stats_by_problem.items()):
+            for stat in sorted(stats.keys()):
+                print(problem_id, stat, file=problem_stats_f)
+                if stat == 'binned_verdicts':
+                    keys = ['AC', 'WA', 'RE', 'TL', 'ML']
+                    print('', *keys, sep='\t', file=problem_stats_f)
+                    print(0, *([0] * len(keys)), sep='\t', file=problem_stats_f)
+                    for bin_id, row in enumerate(stats[stat]):
+                        for key in row.keys():
+                            assert key in keys, key
+                        data = [row[key] for key in keys]
+                        label = ''
+                        if (bin_id + 1) * minutes_in_bin % minutes_per_bin_label == 0:
+                            label = (bin_id + 1) * minutes_in_bin
+                        print(label, *data, sep='\t', file=problem_stats_f)
+                else:
+                    if stat == 'verdicts':
+                        iter_keys = ['AC', 'TL', 'WA', 'RE', 'ML']
+                        for key in stats[stat].keys():
+                            assert key in iter_keys, key
+                    else:
+                        iter_keys = sorted(stats[stat].keys())
+                    for key in iter_keys:
+                        print(key, stats[stat][key] if stats[stat][key] else '', sep='\t', file=problem_stats_f)
+            print(file=problem_stats_f)
+
+
 assert problems == len(problem_names)
 assert((show_oj_rating != []) == (path_to_oj_info != ''))
 
@@ -41,12 +73,20 @@ print('contestDuration {}'.format(contest_duration), file=f)
 print('maxItmoRating {}'.format(max_itmo_rating), file=f)
 print('--></div>', file=f)
 if len(csv_files) > 0:
+    bins_in_contest = contest_duration // minutes_in_bin
     import pandas as pd
     print('<div id="submissionsLog"><!--', file=f)
     all_status = {}
     all_frozen = {}
     assert len(csv_files) == len(regions), f'{len(csv_files)}, {len(regions)}'
     solved_problems_including_upsolving = defaultdict(set)
+    stats_by_problem = {
+        problem_id: {
+            'verdicts': defaultdict(int),
+            'langs': defaultdict(int),
+            'binned_verdicts': [defaultdict(int) for bin_id in range(bins_in_contest)]
+        } for problem_id in problem_ids
+    }
     for csv_file, region in zip(csv_files, regions):
         data = pd.read_csv(path_to_data + csv_file, ';')
         for it, row in tqdm(data.iterrows()):
@@ -84,6 +124,22 @@ if len(csv_files) > 0:
             wrong_attempts = 0
             if p in all_successful_submits:
                 continue
+            if 'Stat_Full' in row:
+                stats_by_problem[row['Prob']]['verdicts'][row['Stat_Full']] += 1
+                stats_by_problem[row['Prob']]['binned_verdicts'][time_in_seconds // (minutes_in_bin * 60)][row['Stat_Full']] += (1 if row['Stat_Full'] == 'AC' else -1)
+            if 'Lang' in row:
+                lang = row['Lang']
+                if lang.find('python:3') != -1:
+                    lang = 'Python 3'
+                elif lang.find('cpp:20') != -1:
+                    lang = 'C++ 20'
+                elif lang.find('cpp:17') != -1:
+                    lang = 'C++ 17'
+                elif lang.find('java:') != -1:
+                    lang = 'Java ' + lang[5:]
+                else:
+                    lang = row['Lang'].capitalize()
+                stats_by_problem[row['Prob']]['langs'][lang] += 1
             if p in all_status:
                 wrong_attempts = all_status[p]
             if time_in_seconds > frozen_time * 60:
@@ -107,6 +163,7 @@ if len(csv_files) > 0:
             if user_name not in all_submissions:
                 all_submissions[user_name] = []
             all_submissions[user_name].append((prob_id, time, result))
+    dump_problem_stats(stats_by_problem)
     print('--></div>', file=f)
     
 def get_value(text, pattern, pos):
@@ -130,6 +187,8 @@ def is_digit(x):
 
 def get_problem_title(problem_id):
     if problem_id < len(problem_names):
+        if hide_problem_title:
+            return problem_ids[problem_id]
         return problem_ids[problem_id] + ' - ' + problem_names[problem_id]
     return ''
 
@@ -275,6 +334,7 @@ class Result:
             return get_name_without_oj_info(self.name), ''
         last_symbol_before_names = ':' if team_members_format == 'Team: A, B, C' else '('
         if self.name.rfind(last_symbol_before_names) == -1:
+            # return get_name_without_oj_info(self.name), ''
             print(f'Could not extract team name: {self.name}')
             exit(47)
         team_name = self.name[:self.name.rfind(last_symbol_before_names)].strip()
@@ -290,7 +350,8 @@ class Result:
             updated_names = []
             taken_name = [False for i in range(len(team_members_with_oj_info[team_name]))]
             for name in team_members:
-                name = ' '.join([name_part.capitalize() for name_part in name.split()])
+                name = name.strip()
+                # name = ' '.join([name_part.capitalize() for name_part in name.split()])
                 name_id = -1
                 for i, member in enumerate(team_members_with_oj_info[team_name]):
                     if not taken_name[i] and name == member['name']:
