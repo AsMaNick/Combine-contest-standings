@@ -3,7 +3,7 @@ def get_folder_by_day_number(day_number):
 
 
 filenames = [
-    f'data/2024_osijek_winter/standings/{i}.pickle' for i in [1, 2, 4, 5, 6, 8, 9]
+    f'data/2024_osijek_fall/standings/{i}.pickle' for i in [1, 2, 4, 5, 6, 8, 9]
 ]
 path_to_scripts = '../../../../../'
 back_arrow_leads_to = '../'
