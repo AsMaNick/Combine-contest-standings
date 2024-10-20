@@ -4,6 +4,7 @@ from datetime import datetime
 import sys
 import os
 from tqdm import tqdm
+from collections import defaultdict
 
 
 class Submission:
@@ -24,27 +25,23 @@ class Submission:
         
     
 def get_verdict(verdict):
-    if verdict.find('Wrong Answer') != -1:
+    if verdict.find('Wrong Answer') != -1 or verdict.find('Неправильна відповідь') != -1:
         return 'WA'
-    if verdict.find('Time Limit') != -1:
+    if verdict.find('Time Limit') != -1 or verdict.find('Ліміт часу') != -1:
         return 'TL'    
-    if verdict.find('Memory Limit') != -1:
+    if verdict.find('Memory Limit') != -1 or verdict.find('Ліміт пам\'яті') != -1:
         return 'ML'    
-    if verdict.find('Memory Limit') != -1:
-        return 'ML'    
-    if verdict.find('Run Time Error') != -1:
+    if verdict.find('Run Time Error') != -1 or verdict.find('Помилка часу виконання') != -1:
         return 'RE'  
-    if verdict.find('Compilation Error') != -1:
+    if verdict.find('Compilation Error') != -1 or verdict.find('Помилка компілювання') != -1:
         return 'CE'  
-    if verdict.find('Accepted') != -1:
+    if verdict.find('Accepted') != -1 or verdict.find('Зараховано') != -1:
         return 'OK'
     print('Unsupported verdict:', verdict)
     exit(1)    
     
         
 def update(user_name):
-    if user_name.find('Jackals') != -1:
-        user_name = 'LNU Jackals'
     if user_name in team_members:
         user_name = team_members[user_name][:team_members[user_name].find(' (')]
     return user_name
@@ -61,34 +58,46 @@ def parse_time_hms(t):
     
 
 def process(input_file):
-    time_start = datetime(2019, 8, 1, 11, 00, 0)
-    time_start_hms = parse_time_hms('07:30:00Z')
+    time_start_hms = parse_time_hms('07:00:00Z')
     ouf = open(input_file[:input_file.rfind('.')] + '.csv', 'w', encoding='utf8')
     print('Run_Id;User_Name;Prob;Dur_Hour;Dur_Min;Dur_Sec;Stat_Short;', file=ouf)
-    data = json.load(open(input_file, 'r'))['rows']
+    data = json.load(open(input_file, 'r', encoding='utf-8'))['rows']
     submissions = []
+    problem_names = defaultdict(set)
     for submission in tqdm(data):
         run_id = submission['Id']
-        user_name = submission['Contestant']['Text']
-        user_name = user_name[:user_name.find(' (')] # ignore team members
+        user_name = submission['Contestant']['Text'].strip()
+        problem_name = submission['Problem']['Text'].strip()
+        user_name = user_name
         user_name = update(user_name)
         problem_id = submission['Problem']['Text'][:1] # only letter
+        assert problem_name[:4] == f'{problem_id} - '
+        problem_name = problem_name[4:].strip()
+        problem_names[problem_id].add(problem_name)
         if True:
             timestamp = parse_time_hms(submission['TimeCreated'][-9:])
             t = timestamp - time_start_hms
         else:
+            time_start = datetime(2024, 9, 28, 10, 00, 0)
             timestamp = int(submission['TimeCreated'][6:-2])
             timestamp = datetime.fromtimestamp(timestamp / 1e3) - time_start
             t = timestamp.seconds
         hour = t // 3600
         minute = (t % 3600) // 60
         second = (t % 3600) % 60
-        verdict = get_verdict(submission['Result'])
+        verdict = get_verdict(submission['Result']['Text'])
         submissions.append(Submission(run_id, user_name, problem_id, hour, minute, second, verdict))
     submissions.sort()
     for submission in submissions:
         submission.write(ouf)
     ouf.close()
-    
+    for problem_id, names in sorted(problem_names.items()):
+        names = list(names)
+        print(problem_id, names)
+        assert len(names) == 1
+    for problem_id, names in sorted(problem_names.items()):
+        names = list(names)
+        print(f"    '{names[0]}',")
 
-process('data/uzhgorod_2020/day5_liga1.json')
+
+process('data/2024_2/logs_algotester.json')
