@@ -48,7 +48,8 @@ def dump_problem_stats(stats_by_problem):
 
 
 assert problems == len(problem_names)
-assert((show_oj_rating != []) == (path_to_oj_info != ''))
+assert (show_oj_rating != []) == (path_to_oj_info != '')
+assert contest_duration % minutes_in_bin == 0
 
 max_length_place = '7771777'
 
