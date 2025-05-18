@@ -1,5 +1,6 @@
 import json
 import pickle
+from utils import *
 from collections import defaultdict
 from camps_combiner_settings import *
 
@@ -7,12 +8,7 @@ from camps_combiner_settings import *
 def calculate_rating_itmo(max_itmo_rating, n_solved_problems, place, max_solved_problems, cnt_official_teams):
     if place == None:
         return 0
-    assert isinstance(place, str)
-    if place.find('-') != -1:
-        min_place = int(place[:place.find('-')])
-    else:
-        min_place = int(place)
-    return 0.5 * max_itmo_rating * n_solved_problems / max_solved_problems * (2 * cnt_official_teams - 2) / (cnt_official_teams + min_place - 2)
+    return get_rating_itmo(max_itmo_rating, n_solved_problems, place, max_solved_problems, cnt_official_teams)
 
 
 def get_day_number(title, day_number):

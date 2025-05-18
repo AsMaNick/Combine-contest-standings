@@ -6,6 +6,7 @@ import json
 import pickle
 import codecs
 import requests
+from utils import *
 from tqdm import tqdm
 from settings import *
 from collections import defaultdict
@@ -417,11 +418,7 @@ class Result:
         print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text" value={:.2f}></input></td>'.format(self.get_dirt()), file=f)
         if max_itmo_rating:
             if place != '-':
-                if place.find('-') != -1:
-                    min_place = int(place[:place.find('-')])
-                else:
-                    min_place = int(place)
-                itmo_rating = 0.5 * max_itmo_rating * self.solved_problems() / max_solved_problems * (2 * cnt_official_teams - 2) / (cnt_official_teams + min_place - 2)
+                itmo_rating = get_rating_itmo(max_itmo_rating, self.solved_problems(), place, max_solved_problems, cnt_official_teams)
             else:
                 itmo_rating = ''
             if itmo_rating =='':

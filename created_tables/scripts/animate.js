@@ -276,7 +276,10 @@ function getPlaces(all_results) {
 
 function calculateRatingITMO(max_solved_problems, cnt_official_teams, place, total) {
     var itmo_rating = 0;
-    if (max_solved_problems > 0) {
+    if (total > 0) {
+        if (cnt_official_teams == 1) {
+            return max_itmo_rating;
+        }
         var min_place;
         if (place.indexOf('-') == -1) {
             min_place = parseInt(place);
