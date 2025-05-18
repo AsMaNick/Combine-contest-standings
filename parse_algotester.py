@@ -58,7 +58,7 @@ def parse_time_hms(t):
     
 
 def process(input_file):
-    time_start_hms = parse_time_hms('07:00:00Z')
+    time_start_hms = parse_time_hms('09:15:00Z')
     ouf = open(input_file[:input_file.rfind('.')] + '.csv', 'w', encoding='utf8')
     print('Run_Id;User_Name;Prob;Dur_Hour;Dur_Min;Dur_Sec;Stat_Short;', file=ouf)
     data = json.load(open(input_file, 'r', encoding='utf-8'))['rows']
@@ -100,4 +100,4 @@ def process(input_file):
         print(f"    '{names[0]}',")
 
 
-process('data/2024_2/logs_algotester.json')
+process('data/2024_3/sources/logs_algotester.json')
