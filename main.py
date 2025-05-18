@@ -24,7 +24,7 @@ def dump_problem_stats(stats_by_problem):
             for stat in sorted(stats.keys()):
                 print(problem_id, stat, file=problem_stats_f)
                 if stat == 'binned_verdicts':
-                    keys = ['AC', 'WA', 'RE', 'TL', 'ML']
+                    keys = ['AC', 'WA', 'RE', 'TL', 'ML', 'CE', 'TESTING', 'FAILURE']
                     print('', *keys, sep='\t', file=problem_stats_f)
                     print(0, *([0] * len(keys)), sep='\t', file=problem_stats_f)
                     for bin_id, row in enumerate(stats[stat]):
@@ -37,7 +37,7 @@ def dump_problem_stats(stats_by_problem):
                         print(label, *data, sep='\t', file=problem_stats_f)
                 else:
                     if stat == 'verdicts':
-                        iter_keys = ['AC', 'TL', 'WA', 'RE', 'ML']
+                        iter_keys = ['AC', 'TL', 'WA', 'RE', 'ML', 'TESTING', 'FAILURE']
                         for key in stats[stat].keys():
                             assert key in iter_keys, key
                     else:
@@ -109,8 +109,8 @@ if len(csv_files) > 0:
             if status == 'OK':
                 solved_problems_including_upsolving[user_name.replace('&sp&', ' ')].add(prob_id)
             if time_in_seconds > contest_duration * 60:
-                print(user_name, prob_id, hour, minute, row['Stat_Short'])
-                assert False, 'Exiting due to large time'
+                # print(user_name, prob_id, hour, minute, row['Stat_Short'])
+                # assert False, 'Exiting due to large time'
                 continue
             if (second != 0 and round_time == 'UP') or (second > 30 and round_time == 'CLOSEST'):
                 minute += 1
@@ -127,7 +127,7 @@ if len(csv_files) > 0:
                 continue
             if 'Stat_Full' in row:
                 stats_by_problem[row['Prob']]['verdicts'][row['Stat_Full']] += 1
-                stats_by_problem[row['Prob']]['binned_verdicts'][time_in_seconds // (minutes_in_bin * 60)][row['Stat_Full']] += (1 if row['Stat_Full'] == 'AC' else -1)
+                stats_by_problem[row['Prob']]['binned_verdicts'][min(time_in_seconds, contest_duration * 60 - 1) // (minutes_in_bin * 60)][row['Stat_Full']] += (1 if row['Stat_Full'] == 'AC' else -1)
             if 'Lang' in row:
                 lang = row['Lang']
                 if lang.find('python:3') != -1:
@@ -335,7 +335,7 @@ class Result:
             return get_name_without_oj_info(self.name), ''
         last_symbol_before_names = ':' if team_members_format == 'Team: A, B, C' else '('
         if self.name.rfind(last_symbol_before_names) == -1:
-            # return get_name_without_oj_info(self.name), ''
+            return get_name_without_oj_info(self.name), ''
             print(f'Could not extract team name: {self.name}')
             exit(47)
         team_name = self.name[:self.name.rfind(last_symbol_before_names)].strip()
