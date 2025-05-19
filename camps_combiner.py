@@ -236,8 +236,10 @@ average rating is calculated as average number among max(1, n - 2) best ratings:
             k = float(rating_averaging_method[4:])
             return f'''Assuming that there were n contests (not counting contests where the team was author or seen the problems before) and team ratings sorted in non-increasing order are r[0], r[1], ..., r[n - 1],
 average rating is calculated as (sum r[i] * {k}^i) * (1 - {k}) / (1 - {k}^n).'''
+
+    assert max_itmo_rating % 2 == 0
     rating_itmo_title = f'''Average rating ITMO calculated by the following formula for each contest:
-100 * A / B * (2n - 2) / (n + p - 2), where
+{max_itmo_rating // 2} * A / B * (2n - 2) / (n + p - 2), where
 A is the number of problems solved by the team,
 B is the maximum number of problems solved by some team,
 n is the number of teams that made at least one submission,
