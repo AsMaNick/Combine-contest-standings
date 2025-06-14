@@ -123,8 +123,14 @@ class ParticipantResults:
             return self.is_author[i]
         return f'{self.results[i].rating_itmo:.2f}' if self.results[i] is not None else '-'
 
+    def get_comparator_key(self):
+        return self.get_average_rating_itmo(), self.get_total_solved(), self.get_total_upsolved(), self.get_average_solved_during_freezing(), -self.get_average_dirt()
+
     def __lt__(self, other):
-        return self.get_average_rating_itmo() < other.get_average_rating_itmo()
+        return self.get_comparator_key() > other.get_comparator_key()
+
+    def __eq__(self, other):
+        return self.get_comparator_key() == other.get_comparator_key()
 
     def is_official_team(self):
         status = [result.is_official_team for result in self.results if result is not None]
@@ -377,7 +383,7 @@ if __name__ == '__main__':
             results_by_participant[extract_team_name(result.displayed_name)].add_result(num, result)
     set_contest_authors()
     all_results = [(results, raw_name) for raw_name, results in results_by_participant.items()]
-    all_results.sort(reverse=True)
+    all_results.sort()
     write(all_standings, all_results, 'created_tables/standings.html', path_to_scripts, back_arrow_leads_to,
           camp_title, camp_dates, show_oj_rating, region_column_name, show_flags,
           statistic_team_number, max_itmo_rating)

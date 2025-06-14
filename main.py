@@ -297,8 +297,14 @@ class Result:
         self.all_submissions = all_submissions
         
     def __lt__(self, other):
-        return self.total > other.total or (self.total == other.total and self.penalty < other.penalty)
-        
+        return self.get_comparator_key() < other.get_comparator_key()
+
+    def __eq__(self, other):
+        return self.get_comparator_key() == other.get_comparator_key()
+
+    def get_comparator_key(self):
+        return -self.total, self.penalty, self.name, self.region
+
     def get_dirt(self):
         dirt = 0
         for res in self.problem_results:
