@@ -195,6 +195,11 @@ function fillSummaryDayInfo(info_to_show) {
                         cur_result.penalty = parseInt(penalty);
                         all_results.push(cur_result);
                     }
+                } else {
+                    var days = all_teams_elem[i].getElementsByClassName('st_prob');
+                    if (days[day].getElementsByTagName('input')[0].value != '-') {
+                        days[day].getElementsByTagName('input')[0].value = '0.00';
+                    }
                 }
                 max_solved_problems = Math.max(max_solved_problems);
             }
