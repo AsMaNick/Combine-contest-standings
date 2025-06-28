@@ -318,7 +318,7 @@ def write(all_standings, all_results, filename, path_to_scripts, back_arrow_lead
         print('<th class="st_team" style="min-width: 300px">{}</th>'.format('User'), file=f)
         print('<th class="st_extra">{}</th>'.format(region_column_name), file=f)
         for contest_id in range(len(all_standings)):
-            print(f'<th title="{all_standings[contest_id].title}" class="st_prob" style="min-width: 40px"><a href="../{get_folder_by_day_number(all_standings[contest_id].day_number)}/standings.html" style="text-decoration: none; color: inherit">{day_header_name} {all_standings[contest_id].day_number}</a></th>', file=f)
+            print(f'<th title="{all_standings[contest_id].title}" class="st_prob" style="min-width: 40px"><a href="../{get_folder_by_day_number(all_standings[contest_id].day_number)}/standings.html{day_link_suffix}" style="text-decoration: none; color: inherit">{day_header_name} {all_standings[contest_id].day_number}</a></th>', file=f)
         write_statistics_headers(f)
         places = get_places(all_results)
         for place, (results, raw_name) in zip(places, all_results):
