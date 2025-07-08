@@ -544,7 +544,7 @@ class Standings:
         all_teams = 0
         for region in regions:
             all_regions.append(self.get_region_statistic(region))
-        all_regions = sorted(all_regions, key=lambda region: region[3])
+        all_regions = sorted(all_regions, key=lambda region: (region[3], -region[2], -region[4], -region[1], region[0]))
         all_regions.append(self.get_region_statistic('All'))
         for region in all_regions:
             if region[0] == '':
