@@ -266,6 +266,12 @@ RJ is the total number of rejected submissions before first AC for each problem'
     print(f'<th title="{upsolved_title}" class="st_pen">Upsolved&nbspⓘ</th>', file=f)
 
 
+def get_needed_lengtehed_place(places):
+    longest_place_len = max(len(place) for place in places)
+    spaces = max(0, longest_place_len - 4)
+    return '&nbsp;' * spaces + 'Place' + '&nbsp;' * spaces
+
+
 def write(all_standings, all_results, filename, path_to_scripts, back_arrow_leads_to,
           camp_title, camp_dates, show_oj_rating, region_column_name, show_flags,
           statistic_team_number, max_itmo_rating):
@@ -314,13 +320,13 @@ def write(all_standings, all_results, filename, path_to_scripts, back_arrow_lead
 
         print('<table style="border-collapse: separate; border-spacing: 1px;" width="100%" class="standings">', file=f)
         print('<tr>', file=f)
-        print('<th class="st_place">{}</th>'.format('Place'), file=f)
+        places = get_places(all_results)
+        print('<th class="st_place">{}</th>'.format(get_needed_lengtehed_place(places)), file=f)
         print('<th class="st_team" style="min-width: 300px">{}</th>'.format('User'), file=f)
         print('<th class="st_extra">{}</th>'.format(region_column_name), file=f)
         for contest_id in range(len(all_standings)):
             print(f'<th title="{all_standings[contest_id].title}" class="st_prob" style="min-width: 40px"><a href="../{get_folder_by_day_number(all_standings[contest_id].day_number)}/standings.html{day_link_suffix}" style="text-decoration: none; color: inherit">{day_header_name} {all_standings[contest_id].day_number}</a></th>', file=f)
         write_statistics_headers(f)
-        places = get_places(all_results)
         for place, (results, raw_name) in zip(places, all_results):
             raw_names = [result.raw_name for result in results.results if result is not None]
             assert raw_names
