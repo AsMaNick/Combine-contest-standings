@@ -292,7 +292,7 @@ function filter(call_fill_places) {
     $(".row_region").each(updateRegions);
     place = 0;
     $(".participant_result").each(myModify);
-    recalculateRatingITMO();
+    recalculateRatingITMO(); // needed for correct sort for summary standings
     if (isSummaryStandings()) {
         updateStatisticsToShow();
     }
@@ -314,6 +314,7 @@ function filter(call_fill_places) {
     for (var i = 0; i < all_results.length; ++i) {
         updatePlace(all_results[i].id, places[i]);
     }
+    recalculateRatingITMO(); // rating may change after updating places for regular standings
     if (isSummaryStandings()) {
         return;
     }
