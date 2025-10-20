@@ -58,10 +58,13 @@ def parse_time_hms(t):
     
 
 def process(input_file):
-    time_start_hms = parse_time_hms('09:15:00Z')
+    time_start_hms = parse_time_hms('07:00:00Z')
     ouf = open(input_file[:input_file.rfind('.')] + '.csv', 'w', encoding='utf8')
     print('Run_Id;User_Name;Prob;Dur_Hour;Dur_Min;Dur_Sec;Stat_Short;', file=ouf)
     data = json.load(open(input_file, 'r', encoding='utf-8'))['rows']
+    if input_file.endswith('.json'):
+        with open(input_file[:-5] + '_indent.json', 'w', encoding='utf-8') as wf:
+            json.dump(data, wf, indent=2)
     submissions = []
     problem_names = defaultdict(set)
     for submission in tqdm(data):
@@ -70,6 +73,7 @@ def process(input_file):
         problem_name = submission['Problem']['Text'].strip()
         user_name = user_name
         user_name = update(user_name)
+        user_name = '"' + user_name.replace('"', '""') + '"' # to work with teams with '"' in name
         problem_id = submission['Problem']['Text'][:1] # only letter
         assert problem_name[:4] == f'{problem_id} - '
         problem_name = problem_name[4:].strip()
@@ -85,6 +89,8 @@ def process(input_file):
         hour = t // 3600
         minute = (t % 3600) // 60
         second = (t % 3600) % 60
+        if t > 3600 * 5:
+            print(t, hour, minute, second)
         verdict = get_verdict(submission['Result']['Text'])
         submissions.append(Submission(run_id, user_name, problem_id, hour, minute, second, verdict))
     submissions.sort()
@@ -100,4 +106,4 @@ def process(input_file):
         print(f"    '{names[0]}',")
 
 
-process('data/2024_3/sources/logs_algotester.json')
+process('data/2025_1/sources/logs_algotester.json')
