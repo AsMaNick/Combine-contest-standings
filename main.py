@@ -6,6 +6,7 @@ import json
 import pickle
 import codecs
 import requests
+import pyperclip
 from utils import *
 from tqdm import tqdm
 from settings import *
@@ -400,7 +401,7 @@ class Result:
         print('<td class="st_team" title="{}"><div class="displayedTeamName">{}</div><div class="teamSubmissionsLog">{}</div>{}</td>'.format('', name_with_oj_info, submissions_log, json_with_oj_info_div), file=f)
         updated_region = self.region
         if show_flags:
-            updated_region = update_region_with_flag(updated_region, 8)
+            updated_region = update_region_with_flag(updated_region, 'country_flag_small')
         print(f'<td class="st_extra">{updated_region}</td>', file=f)
         for prob_res, prob_time, open_time, problem_opener in zip(self.problem_results, self.problem_times, open_times, problem_openers):
             background = ''
@@ -558,7 +559,7 @@ class Standings:
             updated_region = region[0]
             region_align = 'center'
             if show_flags:
-                updated_region = update_region_with_flag(updated_region, 9.5)
+                updated_region = update_region_with_flag(updated_region, 'country_flag_medium')
                 region_align = 'left'
             print(f'<td class="st_region" align="{region_align}">{updated_region}</td>', file=f)
             print('<td class="st_region" align="center">{}</td>'.format(region[1]), file=f)
@@ -662,17 +663,20 @@ class Standings:
             if result.region not in self.ignore_regions:
                 max_solved_problems = result.solved_problems()
                 break
+        text_to_copy = ''
         for place, result in zip(places, self.all_results):
             if result.region in self.ignore_regions:
                 result.write('-', open_times, self.problem_openers, max_solved_problems, cnt_official_teams, f)
             else:
                 result.write(place, open_times, self.problem_openers, max_solved_problems, cnt_official_teams, f)
+                text_to_copy += f'{result.region}\t{result.name}\t{result.total}\t{result.penalty}\n'
             if True:
                 num = 0
                 for prob_res, prob_time in zip(result.problem_results, result.problem_times):
                     if len(prob_res) > 0 and prob_res[0] == '+' and open_times[num] == prob_time:
                         open_times[num] = '(9:99)'
                     num += 1
+        pyperclip.copy(text_to_copy)
         self.write_stats(f)
         print('</table>', file=f)
         print('</div>', file=f)
@@ -753,7 +757,7 @@ def get_unofficial_teams(path):
     return {team for team in teams}
 
 
-def update_region_with_flag(region, img_height):
+def update_region_with_flag(region, img_class):
     flags = {
         'Ukraine': 'ua.png',
         'Romania': 'ro.png',
@@ -766,7 +770,7 @@ def update_region_with_flag(region, img_height):
         'Moldova': 'md.png'
     }
     if region in flags:
-        return f'<img height="{img_height}" src="{path_to_scripts}images/flags/{flags[region]}" alt="Flag">&nbsp;{region}'
+        return f'<img src="{path_to_scripts}images/flags/{flags[region]}" alt="{region}" class="{img_class}">&nbsp;&nbsp;{region}'
     return region
 
 

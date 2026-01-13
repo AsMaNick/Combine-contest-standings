@@ -36,3 +36,15 @@
   background: #4CAF50; /* Green background */
   cursor: pointer; /* Cursor on hover */
 }
+
+.country_flag_small {
+    height: 8;
+    border-radius: .125rem;
+    box-shadow: 0 0 0 0.7px rgba(0, 0, 0, .2);
+}
+
+.country_flag_medium {
+    height: 9.5;
+    border-radius: .125rem;
+    box-shadow: 0 0 0 0.7px rgba(0, 0, 0, .2);
+}
