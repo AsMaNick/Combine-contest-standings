@@ -770,7 +770,8 @@ def update_region_with_flag(region, img_class):
         'Moldova': 'md.png'
     }
     if region in flags:
-        return f'<img src="{path_to_scripts}images/flags/{flags[region]}" alt="{region}" class="{img_class}">&nbsp;&nbsp;{region}'
+        img_height = 8 if img_class == 'country_flag_small' else 9.5
+        return f'<img height="{img_height}" src="{path_to_scripts}images/flags/{flags[region]}" alt="{region}" class="{img_class}">&nbsp;&nbsp;{region}'
     return region
 
 
