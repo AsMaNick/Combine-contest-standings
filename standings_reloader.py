@@ -29,8 +29,8 @@ def reload_standings():
     credentials = reloader_config['credentials']
     print(f'{datetime.now().strftime("%d.%m.%Y %H:%M:%S")}, diffs = ', end='')
     for script in reloader_config['scripts_to_run']:
-        return_code = subprocess.call(script, shell=True,
-                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        with open('data/reload_logs.txt', 'w', encoding='utf-8') as f:
+            return_code = subprocess.call(script, shell=True, stdout=f, stderr=f)
         if return_code:
             raise subprocess.CalledProcessError(return_code, script)
     new_standings = get_standings_snapshot()
