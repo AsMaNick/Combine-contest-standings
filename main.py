@@ -26,7 +26,7 @@ def dump_problem_stats(stats_by_problem):
             for stat in sorted(stats.keys()):
                 print(problem_id, stat, file=problem_stats_f)
                 if stat == 'binned_verdicts':
-                    keys = ['AC', 'WA', 'RE', 'TL', 'ML', 'CE', 'TESTING', 'FAILURE']
+                    keys = ['AC', 'WA', 'RE', 'TL', 'ML', 'CE', 'FAILURE']
                     print('', *keys, sep='\t', file=problem_stats_f)
                     print(0, *([0] * len(keys)), sep='\t', file=problem_stats_f)
                     for bin_id, row in enumerate(stats[stat]):
@@ -39,7 +39,7 @@ def dump_problem_stats(stats_by_problem):
                         print(label, *data, sep='\t', file=problem_stats_f)
                 else:
                     if stat == 'verdicts':
-                        iter_keys = ['AC', 'TL', 'WA', 'RE', 'ML', 'TESTING', 'FAILURE']
+                        iter_keys = ['AC', 'TL', 'WA', 'RE', 'ML', 'FAILURE']
                         for key in stats[stat].keys():
                             assert key in iter_keys, key
                     else:
@@ -91,7 +91,7 @@ if len(csv_files) > 0:
         } for problem_id in problem_ids
     }
     for csv_file, region in zip(csv_files, regions):
-        data = pd.read_csv(path_to_data + csv_file, ';')
+        data = pd.read_csv(path_to_data + csv_file, sep=';')
         for it, row in tqdm(data.iterrows()):
             user_name = str(row['User_Name']).strip().replace(' ', '&sp&')
             if row['Prob'][0] == '!' or bad_user(user_name):
@@ -852,7 +852,7 @@ else:
         print(team_name, region)
         res_team_regions[team_name] = region
         standings.add(team_res)
-    json.dump(res_team_regions, open('team_regions.json', 'w'))
+    json.dump(res_team_regions, open('created_tables/dumped_team_regions.json', 'w'))
 standings.set_problem_openers(problem_openers)
 standings.sort()
 standings.write(f)
