@@ -676,7 +676,8 @@ class Standings:
                     if len(prob_res) > 0 and prob_res[0] == '+' and open_times[num] == prob_time:
                         open_times[num] = '(9:99)'
                     num += 1
-        pyperclip.copy(text_to_copy)
+        if 'copy_to_compare' in globals():
+            pyperclip.copy(text_to_copy)
         self.write_stats(f)
         print('</table>', file=f)
         print('</div>', file=f)
