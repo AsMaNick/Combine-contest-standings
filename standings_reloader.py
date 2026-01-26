@@ -25,21 +25,24 @@ def get_standings_snapshot():
 
 
 def reload_standings():
-    global old_standings, last_update
+    global old_standings, last_update, total_updates
     credentials = reloader_config['credentials']
-    print(f'{datetime.now().strftime("%d.%m.%Y %H:%M:%S")}, diffs = ', end='')
+    print(f'{datetime.now().strftime("%d.%m.%Y %H:%M:%S")}, scripts ', end='', flush=True)
+    start_time = time.time()
     for script in reloader_config['scripts_to_run']:
         with open('data/reload_logs.txt', 'w', encoding='utf-8') as f:
             return_code = subprocess.call(script, shell=True, stdout=f, stderr=f)
         if return_code:
             raise subprocess.CalledProcessError(return_code, script)
+    print(f'{time.time() - start_time:.3f}s, diffs = ', end='', flush=True)
     new_standings = get_standings_snapshot()
     diffs = [path for path in new_standings if old_standings.get(path) != new_standings.get(path)]
     old_standings = new_standings
     if not diffs:
-        print('[]')
+        print('[]', flush=True)
         return
-    print(sorted(diffs), f'updating after {str(timedelta(seconds=int(time.time() - last_update)))}')
+    total_updates += 1
+    print(sorted(diffs), f'after {str(timedelta(seconds=int(time.time() - last_update)))}', end='', flush=True)
     last_update = time.time()
     with ftplib.FTP('s1.ho.ua') as ftp:
         ftp.login(**credentials)
@@ -47,10 +50,11 @@ def reload_standings():
         for path in diffs:
             try:
                 ftp.mkd(path)
-            except ftplib.error_perm as e:
+            except (ftplib.error_perm,):
                 pass
             with open(old_standings[path]['full_path'], 'rb') as f:
                 ftp.storbinary(f'STOR {path}/standings.html', f)
+    print(f', upload #{total_updates} in {time.time() - last_update:.3f}s', flush=True)
 
 
 def upload_loop():
@@ -72,6 +76,7 @@ stop_flag = threading.Event()
 reloader_config = json.load(open('data/reloader_config.json', 'r'))
 old_standings = get_standings_snapshot()
 last_update = time.time()
+total_updates = 0
 thread = threading.Thread(target=upload_loop)
 thread.start()
 thread.join()
