@@ -534,7 +534,8 @@ class Standings:
                     sum_place += place + 1
                 if teams <= statistic_team_number:
                     solved_by_twentiest_team = result.total
-        return region, teams, problems_solved / min(statistic_team_number, teams), sum_place / min(statistic_team_number, teams), solved_by_twentiest_team
+        denominator = max(1, min(statistic_team_number, teams))
+        return region, teams, problems_solved / denominator, sum_place / denominator, solved_by_twentiest_team
         
     def write_regions(self, f):
         print('''<table class="region_statistic" width="50%"> <tr> <th>Show</th> <th>{}</th><th>Teams</th> <th>Average problems solved by top {} teams</th> <th>Average place taken by top {} teams</th> <th>Problems solved by {}<sup>th</sup> team </th> </tr>'''.format(region_column_name, statistic_team_number, statistic_team_number, statistic_team_number), file=f)
@@ -600,7 +601,7 @@ class Standings:
         else:
             print('<link rel="stylesheet" href="http://ejudge.khai.edu/ejudge/unpriv.css" type="text/css" />', file=f)
             print('<link rel="stylesheet" href="http://ejudge.khai.edu/ejudge/unpriv3.css" type="text/css" />', file=f)
-        print('<body onload="loadResults()">', file=f)
+        print('<body onload="updateSliderFill(); loadResults();">', file=f)
         print('<script type="text/javascript" src="{}scripts/jquery.js"> </script>'.format(path_to_scripts), file=f)
         print('<script type="text/javascript" src="{}scripts/filter_regions.js"> </script>'.format(path_to_scripts), file=f)
         print('<script type="text/javascript" src="{}scripts/animate.js"> </script>'.format(path_to_scripts), file=f)
@@ -632,9 +633,10 @@ class Standings:
         print('</tr>', file=f)
         print('</table>', file=f)
 
-        print('<center style="font-size: 25px" id="standings_time"> Standings [{}] </center>'.format(get_time_str(contest_duration)), file=f)
-        
-        print('<input type="range" min="0" max="{}" value="{}" class="slider" id="slider" oninput="updateSliderFill()" onchange="updateSliderFill()" onmousedown="sliderMouseDown()" onmouseup="sliderMouseUp()">'.format(contest_duration, contest_duration), file=f)
+        slider_value = globals().get('contest_live_time', contest_duration)
+        print('<center style="font-size: 25px" id="standings_time"> Standings [{}] </center>'.format(get_time_str(slider_value)), file=f)
+
+        print('<input type="range" min="0" max="{}" value="{}" class="slider" id="slider" oninput="updateSliderFill()" onchange="updateSliderFill()" onmousedown="sliderMouseDown()" onmouseup="sliderMouseUp()">'.format(contest_duration, slider_value), file=f)
         
         print('<table style="border-collapse: separate; border-spacing: 1px;" width="100%" class="standings">', file=f)
         print('<tr>', file=f)

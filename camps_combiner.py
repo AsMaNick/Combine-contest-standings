@@ -52,7 +52,7 @@ class CompressedStandings:
         self.n_problems = len(standings.problem_openers)
         places, cnt_official_teams = standings.get_places()
         official_results = [result.solved_problems() for result in standings.all_results if result.region not in standings.ignore_regions]
-        max_solved_problems = max(official_results)
+        max_solved_problems = max([0] + official_results)
         assert(cnt_official_teams == len(official_results))
         self.all_results = [CompressedResult(result, contest_duration, 
                                              calculate_rating_itmo(max_itmo_rating, result.solved_problems(), 
