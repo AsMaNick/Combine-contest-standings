@@ -414,7 +414,7 @@ class Result:
             if isinstance(elapsed_time, int):
                 assert elapsed_time >= 0
                 elapsed_time = min(elapsed_time, contest_duration * 60)
-                if elapsed_time == contest_duration:
+                if elapsed_time == contest_duration * 60:
                     elapsed_time = 'Finished'
                 else:
                     elapsed_time = f'{elapsed_time // 3600}:{(elapsed_time % 3600) // 60:02d}:{elapsed_time % 60:02d}'
