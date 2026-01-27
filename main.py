@@ -108,7 +108,7 @@ if len(csv_files) > 0:
             dur_day = int(row['Dur_Day']) if 'Dur_Day' in row else 0
             time_in_seconds = dur_day * 3600 * 24 + hour * 3600 + minute * 60 + second
             status = row['Stat_Short']
-            if status == 'OK':
+            if status == 'OK' and (frozen_time == contest_duration or time_in_seconds <= frozen_time * 60):
                 solved_problems_including_upsolving[user_name.replace('&sp&', ' ')].add(prob_id)
             if time_in_seconds > contest_duration * 60:
                 # print(user_name, prob_id, hour, minute, row['Stat_Short'])
@@ -329,6 +329,12 @@ class Result:
                 res += 1
         return res
 
+    def solved_problems_during_freezing(self, freezing_time):
+        return len([
+            1 for prob_res, prob_t in zip(self.problem_results, self.problem_times)
+            if len(prob_res) > 0 and prob_res[0] == '+' and prob_t and prob_t >= freezing_time
+        ])
+
     def get_name_with_oj_info(self):
         assert team_members_format in ['Team: A, B, C', 'Team (A, B, C)']
 
@@ -408,7 +414,12 @@ class Result:
             if isinstance(elapsed_time, int):
                 assert elapsed_time >= 0
                 elapsed_time = min(elapsed_time, contest_duration * 60)
-                elapsed_time = f'{elapsed_time // 3600}:{(elapsed_time % 3600) // 60:02d}:{elapsed_time % 60:02d}'
+                if elapsed_time == contest_duration:
+                    elapsed_time = 'Finished'
+                else:
+                    elapsed_time = f'{elapsed_time // 3600}:{(elapsed_time % 3600) // 60:02d}:{elapsed_time % 60:02d}'
+                    if contest_live_time == contest_duration:
+                        elapsed_time = f'<strong>{elapsed_time}</strong>'
             print(f'<td class="st_extra">{elapsed_time}</th>', file=f)
         for prob_res, prob_time, open_time, problem_opener in zip(self.problem_results, self.problem_times, open_times, problem_openers):
             background = ''

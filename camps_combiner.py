@@ -32,7 +32,7 @@ class CompressedResult:
         self.n_upsolved_problems = len(solved_problems_including_upsolving[result.name]) - self.n_solved_problems
         freezing_time = contest_duration * 4 // 5
         freezing_time = f'({freezing_time // 60}:{freezing_time % 60:02d})'
-        self.n_solved_problems_during_freezing = len([t for t in result.problem_times if t and t >= freezing_time])
+        self.n_solved_problems_during_freezing = result.solved_problems_during_freezing(freezing_time)
         self.penalty = result.penalty
         self.dirt = result.get_dirt()
         self.region = result.region
