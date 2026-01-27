@@ -14,6 +14,10 @@ from collections import defaultdict
 from camps_combiner import CompressedStandings
 
 
+if 'path_to_virtual_time' in globals() and 'show_virtual_time' not in sys.argv:
+    del path_to_virtual_time
+
+
 def bad_user(user_name):
     return user_name in ['Judge_Main', 'nan', 'judge13', 'ejudge&sp&administrator']
 
