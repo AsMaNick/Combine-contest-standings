@@ -387,7 +387,7 @@ class Result:
         else: # use full info from json
             raise NotImplementedError
 
-    def write(self, place, open_times, problem_openers, max_solved_problems, cnt_official_teams, f):
+    def write(self, place, open_times, problem_openers, max_solved_problems, cnt_official_teams, f, elapsed_times):
         submissions_log = '<!--' + '\n'.join([f'{problem_id} {time} {result}' for problem_id, time, result in self.all_submissions]) + '-->'
         print('<tr class="participant_result">', file=f)
         print('<td class="st_place"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(place), file=f)
@@ -403,6 +403,13 @@ class Result:
         if show_flags:
             updated_region = update_region_with_flag(updated_region, 'country_flag_small')
         print(f'<td class="st_extra">{updated_region}</td>', file=f)
+        if elapsed_times is not None:
+            elapsed_time = elapsed_times.get(self.name, '?:??:??')
+            if isinstance(elapsed_time, int):
+                assert elapsed_time >= 0
+                elapsed_time = min(elapsed_time, contest_duration * 60)
+                elapsed_time = f'{elapsed_time // 3600}:{(elapsed_time % 3600) // 60:02d}:{elapsed_time % 60:02d}'
+            print(f'<td class="st_extra">{elapsed_time}</th>', file=f)
         for prob_res, prob_time, open_time, problem_opener in zip(self.problem_results, self.problem_times, open_times, problem_openers):
             background = ''
             if len(prob_res) > 0:
@@ -485,7 +492,9 @@ class Standings:
         print('<tr class="submissions_statistic">', file=f)
         print('<td class="st_place"><output style="color: transparent">{}</output></td>'.format(max_length_place), file=f)
         print('<td class="st_team">Submissions:</td>', file=f)
-        print('<td class="st_team">&nbsp;</td>', file=f)
+        print('<td class="st_extra">&nbsp;</td>', file=f)
+        if 'path_to_virtual_time' in globals():
+            print('<td class="st_extra">&nbsp;</td>', file=f)
         for problem_id, x in enumerate(self.get_total()):
             print('<td title="{}" class="st_prob">{}</td>'.format(get_problem_title(problem_id), x), file=f)
         print('<td class="st_pen"><output style="color: transparent">9999</output></td>', file=f)
@@ -497,7 +506,9 @@ class Standings:
         print('<tr class="submissions_statistic">', file=f)
         print('<td class="st_place"></td>', file=f)
         print('<td class="st_team">Accepted:</td>', file=f)
-        print('<td class="st_team">&nbsp;</td>', file=f)
+        print('<td class="st_extra">&nbsp;</td>', file=f)
+        if 'path_to_virtual_time' in globals():
+            print('<td class="st_extra">&nbsp;</td>', file=f)
         for problem_id, x in enumerate(self.get_ok()):
             print('<td title="{}" class="st_prob">{}</td>'.format(get_problem_title(problem_id), x), file=f)
         print('<td class="st_team">&nbsp;</td>', file=f)
@@ -509,7 +520,9 @@ class Standings:
         print('<tr class="submissions_statistic">', file=f)
         print('<td class="st_place">&nbsp;</td>', file=f)
         print('<td class="st_team">%:</td>', file=f)
-        print('<td class="st_team">&nbsp;</td>', file=f)
+        print('<td class="st_extra">&nbsp;</td>', file=f)
+        if 'path_to_virtual_time' in globals():
+            print('<td class="st_extra">&nbsp;</td>', file=f)
         for problem_id, (total, ok) in enumerate(zip(self.get_total(), self.get_ok())):
             perc = 0
             if total > 0:
@@ -643,6 +656,10 @@ class Standings:
         print('<th class="st_place">{}</th>'.format('Place'), file=f)
         print('<th class="st_team" style="min-width: 185px">{}</th>'.format('User'), file=f)
         print('<th class="st_extra">{}</th>'.format(region_column_name), file=f)
+        elapsed_times = None
+        if 'path_to_virtual_time' in globals():
+            elapsed_times = json.load(open(globals()['path_to_virtual_time'], encoding='utf-8'))
+            print('<th class="st_extra">Time</th>', file=f)
         for prob_id in range(problems):
             print('<th title="{}" class="st_prob" style="min-width: 32px">{}</th>'.format(get_problem_title(prob_id), problem_ids[prob_id]), file=f)
         print('<th  class="st_total">{}</th>'.format('Total'), file=f)
@@ -668,9 +685,9 @@ class Standings:
         text_to_copy = ''
         for place, result in zip(places, self.all_results):
             if result.region in self.ignore_regions:
-                result.write('-', open_times, self.problem_openers, max_solved_problems, cnt_official_teams, f)
+                result.write('-', open_times, self.problem_openers, max_solved_problems, cnt_official_teams, f, elapsed_times)
             else:
-                result.write(place, open_times, self.problem_openers, max_solved_problems, cnt_official_teams, f)
+                result.write(place, open_times, self.problem_openers, max_solved_problems, cnt_official_teams, f, elapsed_times)
                 text_to_copy += f'{result.region}\t{result.name}\t{result.total}\t{result.penalty}\n'
             if True:
                 num = 0
