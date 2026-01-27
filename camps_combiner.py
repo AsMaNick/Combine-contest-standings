@@ -2,7 +2,6 @@ import json
 import pickle
 from utils import *
 from collections import defaultdict
-from camps_combiner_settings import *
 
 
 def calculate_rating_itmo(max_itmo_rating, n_solved_problems, place, max_solved_problems, cnt_official_teams):
@@ -382,7 +381,9 @@ def set_contest_authors():
 
 
 if __name__ == '__main__':
+    from camps_combiner_settings import *
     all_standings = [load_standings(filename) for filename in filenames]
+    all_standings = list(filter(lambda x: len(x.all_results), all_standings))
     results_by_participant = defaultdict(lambda: ParticipantResults(len(all_standings)))
     for num, standings in enumerate(all_standings):
         for result in standings.all_results:
