@@ -86,7 +86,7 @@ if len(csv_files) > 0:
     all_status = {}
     all_frozen = {}
     assert len(csv_files) == len(regions), f'{len(csv_files)}, {len(regions)}'
-    solved_problems_including_upsolving = defaultdict(set)
+    solved_problems_including_upsolving = defaultdict(dict)
     stats_by_problem = {
         problem_id: {
             'verdicts': defaultdict(int),
@@ -113,7 +113,8 @@ if len(csv_files) > 0:
             time_in_seconds = dur_day * 3600 * 24 + hour * 3600 + minute * 60 + second
             status = row['Stat_Short']
             if status == 'OK' and (frozen_time == contest_duration or time_in_seconds <= frozen_time * 60):
-                solved_problems_including_upsolving[user_name.replace('&sp&', ' ')].add(prob_id)
+                if prob_id not in solved_problems_including_upsolving[user_name.replace('&sp&', ' ')]:
+                    solved_problems_including_upsolving[user_name.replace('&sp&', ' ')][prob_id] = time_in_seconds
             if time_in_seconds > contest_duration * 60:
                 # print(user_name, prob_id, hour, minute, row['Stat_Short'])
                 # assert False, 'Exiting due to large time'
@@ -425,7 +426,10 @@ class Result:
                     if contest_live_time == contest_duration:
                         elapsed_time = f'<strong>{elapsed_time}</strong>'
             print(f'<td class="st_extra">{elapsed_time}</th>', file=f)
-        for prob_res, prob_time, open_time, problem_opener in zip(self.problem_results, self.problem_times, open_times, problem_openers):
+        for prob_id, (prob_res, prob_time, open_time, problem_opener) in enumerate(zip(self.problem_results,
+                                                                                       self.problem_times,
+                                                                                       open_times,
+                                                                                       problem_openers)):
             background = ''
             if len(prob_res) > 0:
                 if prob_res[0] == '+':
@@ -436,11 +440,24 @@ class Result:
                     background = '#ffd0d0'
                 elif prob_res[0] == '?':
                     background = '#fcffaa'
+            st_time_class = 'st_time'
+            if False and (prob_res == '' or prob_res[0] == '-') and prob_id in solved_problems_including_upsolving[self.name]:
+                prob_res += '*'
+                upsolving_time = min(100 * 60, solved_problems_including_upsolving[self.name][prob_id] // 60)
+                prob_time = '99:99' if upsolving_time == 100 * 60 else f'{upsolving_time // 60}:{upsolving_time % 60:02d}'
+                if len(prob_time) == 4:
+                    # prob_time = f'( {prob_time})'
+                    pass
+                prob_time = ''
+                background = '#e0f9ff' if True or prob_res == '*' else '#ffeeff'
+                background = '#e0ffe0' if prob_res == '*' else '#ffd0d0'
+                background += '; opacity: 0.6'
+                st_time_class = 'st_time_upsolved'
             if background != '':
                 background = 'background: ' + background
             print('<td style="{}" class="st_prob">{}'.format(background, prob_res, prob_time), end='', file=f)
             if prob_time != '':
-                print('<div class="st_time">{}</div>'.format(prob_time), end='', file=f)
+                print(f'<div class="{st_time_class}">{prob_time}</div>', end='', file=f)
             print('</td>', file=f)
         print('<td class="st_total"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.total), file=f)
         print('<td class="st_pen"><input style="width: 100%; outline: none; border:none" readonly type="text" value={}></input></td>'.format(self.penalty), file=f)
@@ -741,8 +758,6 @@ def process(content, region):
             real_region = 'School'
         if team[:4] == 'team' and len(team) == 6 and (69 <= int(team[4:]) <= 89):
             real_region = 'School'
-        if team in team_names:
-            team = team_names[team]
         if not is_digit(place[0]) and place[0] != '-':
             break
         if region_column_exist:
