@@ -75,6 +75,7 @@ team_members_with_oj_info = {}
 if path_to_oj_info != '':
     team_members_with_oj_info = json.load(open(path_to_oj_info, 'r'))
 
+print('<head><meta charset="UTF-8"></head>', file=f)
 print('<div id="standingsSettings"><!--', file=f)
 print('contestDuration {}'.format(contest_duration), file=f)
 print('maxItmoRating {}'.format(max_itmo_rating), file=f)
@@ -351,10 +352,12 @@ class Result:
             return name
 
         if len(show_oj_rating) == 0:
-            return get_name_without_oj_info(self.name), ''
+            # return get_name_without_oj_info(self.name), ''
+            print(f'Could not find oj info: {self.name}')
+            exit(47)
         last_symbol_before_names = ':' if team_members_format == 'Team: A, B, C' else '('
         if self.name.rfind(last_symbol_before_names) == -1:
-            return get_name_without_oj_info(self.name), ''
+            # return get_name_without_oj_info(self.name), ''
             print(f'Could not extract team name: {self.name}')
             exit(47)
         team_name = self.name[:self.name.rfind(last_symbol_before_names)].strip()

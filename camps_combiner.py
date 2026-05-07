@@ -275,6 +275,7 @@ def write(all_standings, all_results, filename, path_to_scripts, back_arrow_lead
           camp_title, camp_dates, show_oj_rating, region_column_name, show_flags,
           statistic_team_number, max_itmo_rating):
     with open(filename, 'w', encoding='utf-8') as f:
+        print('<head><meta charset="UTF-8"></head>', file=f)
         print('<div id="standingsSettings"><!--', file=f)
         print('contestDuration {}'.format(0), file=f)
         print('maxItmoRating {}'.format(max_itmo_rating), file=f)
