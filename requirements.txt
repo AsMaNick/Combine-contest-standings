@@ -1,0 +1,6 @@
+tqdm
+eolymp
+pandas
+protobuf
+requests
+pyperclip
