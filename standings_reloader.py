@@ -37,8 +37,7 @@ def run_scripts(script_name):
 
 def reload_standings(update_id):
     update_type = 'full' if update_id % reloader_config['full_script_period'] == 0 else 'light'
-    global old_files, last_update, total_updates
-    credentials = reloader_config['credentials']
+    global old_files, last_update
     print(f'{datetime.now().strftime("%d.%m.%Y %H:%M:%S")}, scripts ', end='', flush=True)
     start_time = time.time()
     run_scripts(f'update_logs_{update_type}')
@@ -59,8 +58,15 @@ def reload_standings(update_id):
         return
     print(sorted(diffs), f'after {str(timedelta(seconds=int(time.time() - last_update)))}', end='', flush=True)
     last_update = time.time()
+    if reloader_config['upload_to_web']:
+        upload_to_web(update_type, diffs, new_files)
+    print(f', upload #{total_updates} in {time.time() - last_update:.3f}s', flush=True)
+
+
+def upload_to_web(update_type, diffs, new_files):
+    global total_updates
     with ftplib.FTP('s1.ho.ua') as ftp:
-        ftp.login(**credentials)
+        ftp.login(**reloader_config['credentials'])
         ftp.cwd('htdocs/' + reloader_config['directory_to_monitor'])
         for path in diffs:
             total_updates += 1
@@ -71,7 +77,6 @@ def reload_standings(update_id):
             with open(new_files[update_type][path]['full_path'], 'rb') as f:
                 filename = new_files[update_type][path]['filename']
                 ftp.storbinary(f'STOR {path}/{filename}', f)
-    print(f', upload #{total_updates} in {time.time() - last_update:.3f}s', flush=True)
 
 
 def upload_loop():
@@ -82,7 +87,7 @@ def upload_loop():
             reload_standings(update_id)
         except Exception as e:
             print(f'reload failed {e}')
-        stop_flag.wait(60)
+        stop_flag.wait(reloader_config['wait_interval'])
 
 
 def handle_sigint(signum, frame):
