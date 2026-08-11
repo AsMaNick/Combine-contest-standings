@@ -1,6 +1,4 @@
-import os
 import sys
-import dis
 import math
 import json
 import pickle
@@ -353,13 +351,11 @@ class Result:
 
         if len(show_oj_rating) == 0:
             # return get_name_without_oj_info(self.name), ''
-            print(f'Could not find oj info: {self.name}')
-            exit(47)
+            assert False, f'Could not find oj info: {self.name}'
         last_symbol_before_names = ':' if team_members_format == 'Team: A, B, C' else '('
         if self.name.rfind(last_symbol_before_names) == -1:
-            # return get_name_without_oj_info(self.name), ''
-            print(f'Could not extract team name: {self.name}')
-            exit(47)
+            return get_name_without_oj_info(self.name), ''
+            assert False, f'Could not extract team name: {self.name}'
         team_name = self.name[:self.name.rfind(last_symbol_before_names)].strip()
         if team_name not in team_members_with_oj_info:
             return get_name_without_oj_info(self.name), ''
