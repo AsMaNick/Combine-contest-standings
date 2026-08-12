@@ -52,18 +52,18 @@ def reload_standings(update_id):
         path for path in new_files[update_type]
         if old_files[update_type].get(path) != new_files[update_type].get(path)
     ]
-    old_files = new_files
     if not diffs:
         print('[]', flush=True)
         return
     print(sorted(diffs), f'after {str(timedelta(seconds=int(time.time() - last_update)))}', end='', flush=True)
     last_update = time.time()
     if reloader_config['upload_to_web']:
-        upload_to_web(update_type, diffs, new_files)
+        upload_to_web(diffs, new_files[update_type])
+    old_files = new_files
     print(f', upload #{total_updates} in {time.time() - last_update:.3f}s', flush=True)
 
 
-def upload_to_web(update_type, diffs, new_files):
+def upload_to_web(diffs, new_files):
     global total_updates
     with ftplib.FTP('s1.ho.ua') as ftp:
         ftp.login(**reloader_config['credentials'])
@@ -74,8 +74,8 @@ def upload_to_web(update_type, diffs, new_files):
                 ftp.mkd(path)
             except (ftplib.error_perm,):
                 pass
-            with open(new_files[update_type][path]['full_path'], 'rb') as f:
-                filename = new_files[update_type][path]['filename']
+            with open(new_files[path]['full_path'], 'rb') as f:
+                filename = new_files[path]['filename']
                 ftp.storbinary(f'STOR {path}/{filename}', f)
 
 
