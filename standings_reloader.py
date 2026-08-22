@@ -97,7 +97,7 @@ def handle_sigint(signum, frame):
 
 
 def load_credentials(credentials):
-    credentials['passwd'] = secrets_holder.get_password('ho.ua', credentials['user'], credentials['passwd'])
+    credentials['passwd'] = secrets_holder.get_secret('ho.ua', credentials['user'], credentials['passwd'])
 
 
 signal.signal(signal.SIGINT, handle_sigint)
