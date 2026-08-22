@@ -5,6 +5,7 @@ import ftplib
 import signal
 import threading
 import subprocess
+import secrets_holder
 from datetime import datetime, timedelta
 
 
@@ -95,9 +96,14 @@ def handle_sigint(signum, frame):
     stop_flag.set()
 
 
+def load_credentials(credentials):
+    credentials['passwd'] = secrets_holder.get_password('ho.ua', credentials['user'], credentials['passwd'])
+
+
 signal.signal(signal.SIGINT, handle_sigint)
 stop_flag = threading.Event()
 reloader_config = json.load(open('data/reloader_config.json', 'r'))
+load_credentials(reloader_config['credentials'])
 old_files = {
     'light': get_files_snapshot(),
     'full': get_files_snapshot()
