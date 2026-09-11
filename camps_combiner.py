@@ -194,7 +194,7 @@ def calculate_regions_stats(all_standings, all_results, statistic_team_number):
         stats_by_region[region] = (n_teams,) + tuple(stats)
     all_stats = [(stats, region) for region, stats in stats_by_region.items() if region != 'All']
     all_stats.sort(reverse=True)
-    all_stats = all_stats + [(stats_by_region['All'], 'All')]
+    all_stats = all_stats + ([(stats_by_region['All'], 'All')] if 'All' in stats_by_region else [])
     print(all_stats)
     return all_stats
 
@@ -266,7 +266,7 @@ RJ is the total number of rejected submissions before first AC for each problem'
 
 
 def get_needed_lengtehed_place(places):
-    longest_place_len = max(len(place) for place in places)
+    longest_place_len = max([len(place) for place in places], default=0)
     spaces = max(0, longest_place_len - 4)
     return '&nbsp;' * spaces + 'Place' + '&nbsp;' * spaces
 
