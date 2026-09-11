@@ -111,6 +111,10 @@ if len(csv_files) > 0:
             dur_day = int(row['Dur_Day']) if 'Dur_Day' in row else 0
             time_in_seconds = dur_day * 3600 * 24 + hour * 3600 + minute * 60 + second
             status = row['Stat_Short']
+            if (globals().get('contest_live_time', contest_duration) != contest_duration and
+                    time_in_seconds > globals().get('contest_live_time', contest_duration)):
+                # do not count such submissions even in upsolving (some contest edition is still ongoing)
+                continue
             if status == 'OK' and (frozen_time == contest_duration or time_in_seconds <= frozen_time * 60):
                 if prob_id not in solved_problems_including_upsolving[user_name.replace('&sp&', ' ')]:
                     solved_problems_including_upsolving[user_name.replace('&sp&', ' ')][prob_id] = time_in_seconds
