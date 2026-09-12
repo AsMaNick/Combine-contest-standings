@@ -112,7 +112,7 @@ if len(csv_files) > 0:
             time_in_seconds = dur_day * 3600 * 24 + hour * 3600 + minute * 60 + second
             status = row['Stat_Short']
             if (globals().get('contest_live_time', contest_duration) != contest_duration and
-                    time_in_seconds > globals().get('contest_live_time', contest_duration)):
+                    time_in_seconds > globals().get('contest_live_time', contest_duration) * 60):
                 # do not count such submissions even in upsolving (some contest edition is still ongoing)
                 continue
             if status == 'OK' and (frozen_time == contest_duration or time_in_seconds <= frozen_time * 60):
@@ -421,7 +421,7 @@ class Result:
             elapsed_time = elapsed_times.get(self.name, '?:??:??')
             if isinstance(elapsed_time, int):
                 assert elapsed_time >= 0
-                elapsed_time = min(elapsed_time, contest_duration * 60)
+                elapsed_time = min(elapsed_time, contest_live_time * 60)
                 if elapsed_time == contest_duration * 60:
                     elapsed_time = 'Finished'
                 else:
