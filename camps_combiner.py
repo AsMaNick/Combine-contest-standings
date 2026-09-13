@@ -193,7 +193,7 @@ def calculate_regions_stats(all_standings, all_results, statistic_team_number):
                 stats[i] /= len(results)
         stats_by_region[region] = (n_teams,) + tuple(stats)
     all_stats = [(stats, region) for region, stats in stats_by_region.items() if region != 'All']
-    all_stats.sort(reverse=True)
+    all_stats.sort(key=lambda x: x[0][1:], reverse=True)
     all_stats = all_stats + ([(stats_by_region['All'], 'All')] if 'All' in stats_by_region else [])
     print(all_stats)
     return all_stats
