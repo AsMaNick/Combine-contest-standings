@@ -60,7 +60,13 @@ def reload_standings(update_id):
     last_update = time.time()
     if reloader_config['upload_to_web']:
         upload_to_web(diffs, new_files[update_type])
-    old_files = new_files
+    if update_type == 'full':
+        old_files = new_files
+    else:
+        for update_type_to_synchronize in ['light', 'full']:
+            for path in diffs:
+                if path in new_files[update_type_to_synchronize]:
+                    old_files[update_type_to_synchronize][path] = new_files[update_type_to_synchronize][path]
     print(f', upload #{total_updates} in {time.time() - last_update:.3f}s', flush=True)
 
 
